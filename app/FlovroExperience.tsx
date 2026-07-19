@@ -138,21 +138,6 @@ export function FlovroExperience() {
             reduceMotion: boolean;
           };
 
-          if (!reduceMotion) {
-            gsap
-              .timeline({
-                scrollTrigger: {
-                  trigger: ".hero",
-                  start: "top top",
-                  end: "bottom top",
-                  scrub: 1,
-                },
-              })
-              .to(".hero-copy", { y: -105, autoAlpha: 0.2, ease: "none" }, 0)
-              .to(".hero-side", { y: -55, autoAlpha: 0, ease: "none" }, 0)
-              .to(".scroll-cue", { autoAlpha: 0, ease: "none" }, 0);
-          }
-
           if (desktop && !reduceMotion) {
             const track = serviceTrackRef.current;
             if (track) {

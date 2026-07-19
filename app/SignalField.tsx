@@ -19,6 +19,7 @@ export function SignalField() {
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
+    const hero = host.closest<HTMLElement>(".hero");
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
     camera.position.set(0, 0, 7.6);
@@ -33,8 +34,10 @@ export function SignalField() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     host.appendChild(renderer.domElement);
 
+    const scrollRig = new THREE.Group();
     const signal = new THREE.Group();
-    scene.add(signal);
+    scene.add(scrollRig);
+    scrollRig.add(signal);
 
     const coreGeometry = new THREE.IcosahedronGeometry(1.18, 4);
     const coreMaterial = new THREE.MeshBasicMaterial({
@@ -167,23 +170,55 @@ export function SignalField() {
           0.25,
         );
 
-      if (!reduceMotion) {
-        gsap
-          .timeline({
-            scrollTrigger: {
-              trigger: host,
-              start: "top top",
-              end: "bottom top",
-              scrub: 1,
-            },
-          })
-          .to(camera.position, { z: 5.2, duration: 1, ease: "none" }, 0)
+      if (!reduceMotion && hero) {
+        const canPinHero = window.matchMedia("(min-width: 900px)").matches;
+        const heroCopy = hero.querySelector<HTMLElement>(".hero-copy");
+        const heroSide = hero.querySelector<HTMLElement>(".hero-side");
+        const heroStatus = hero.querySelector<HTMLElement>(".hero-status");
+        const scrollCue = hero.querySelector<HTMLElement>(".scroll-cue");
+        const orbitA = hero.querySelector<HTMLElement>(".hero-orbit-a");
+        const orbitB = hero.querySelector<HTMLElement>(".hero-orbit-b");
+
+        const heroTimeline = gsap.timeline({
+          defaults: { ease: "none" },
+          scrollTrigger: {
+            trigger: hero,
+            start: "top top",
+            end: () =>
+              canPinHero
+                ? `+=${Math.max(window.innerHeight * 2.4, 1700)}`
+                : "bottom top",
+            pin: canPinHero,
+            pinSpacing: true,
+            scrub: 0.9,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+            refreshPriority: -10,
+          },
+        });
+
+        heroTimeline
+          .addLabel("focus", 0)
+          .to(scrollCue, { autoAlpha: 0, duration: 0.1 }, "focus")
+          .to(camera.position, { z: 4.65, duration: 0.72 }, "focus")
           .to(
-            signal.rotation,
-            { y: Math.PI * 0.72, x: -0.28, duration: 1, ease: "none" },
-            0,
+            scrollRig.rotation,
+            { y: Math.PI * 0.9, x: -0.22, duration: 0.72 },
+            "focus",
           )
-          .to(signal.scale, { x: 1.36, y: 1.36, z: 1.36, ease: "none" }, 0);
+          .to(
+            scrollRig.scale,
+            { x: 1.3, y: 1.3, z: 1.3, duration: 0.72 },
+            "focus",
+          )
+          .to(orbitA, { scale: 1.2, rotation: 18, duration: 0.72 }, "focus")
+          .to(orbitB, { scale: 1.12, rotation: -12, duration: 0.72 }, "focus")
+          .addLabel("release", 0.72)
+          .to(heroCopy, { y: -48, autoAlpha: 0.12, duration: 0.24 }, "release")
+          .to(heroSide, { y: -30, autoAlpha: 0, duration: 0.2 }, "release")
+          .to(heroStatus, { y: 24, autoAlpha: 0, duration: 0.2 }, "release")
+          .to(host, { scale: 1.06, autoAlpha: 0.3, duration: 0.24 }, "release")
+          .to({}, { duration: 0.08 });
       }
     }, host);
 
