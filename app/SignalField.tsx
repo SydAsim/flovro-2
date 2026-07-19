@@ -2,10 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
+import { loadGsap } from "./gsapClient";
 
 export function SignalField() {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -13,6 +10,11 @@ export function SignalField() {
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
+    let cancelled = false;
+    let teardown: (() => void) | undefined;
+
+    void loadGsap().then(({ gsap }) => {
+      if (cancelled) return;
 
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -203,7 +205,7 @@ export function SignalField() {
     };
     render();
 
-    return () => {
+    teardown = () => {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("pointermove", onPointerMove);
       resizeObserver.disconnect();
@@ -216,6 +218,12 @@ export function SignalField() {
       dotMaterial.dispose();
       renderer.dispose();
       renderer.domElement.remove();
+    };
+    });
+
+    return () => {
+      cancelled = true;
+      teardown?.();
     };
   }, []);
 

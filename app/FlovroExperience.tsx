@@ -1,13 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { CustomEase } from "gsap/CustomEase";
+import { loadGsap } from "./gsapClient";
 import { SignalField } from "./SignalField";
-
-gsap.registerPlugin(ScrollTrigger, CustomEase);
-CustomEase.create("flovroEase", "M0,0 C0.16,1 0.3,1 1,1");
 
 const services = [
   {
@@ -101,8 +96,13 @@ export function FlovroExperience() {
   useEffect(() => {
     const scope = rootRef.current;
     if (!scope) return;
-    const media = gsap.matchMedia();
-    const context = gsap.context(() => {
+    let cancelled = false;
+    let teardown: (() => void) | undefined;
+
+    void loadGsap().then(({ gsap, ScrollTrigger }) => {
+      if (cancelled) return;
+      const media = gsap.matchMedia();
+      const context = gsap.context(() => {
       const intro = gsap.timeline({ defaults: { ease: "flovroEase" } });
       intro
         .to(".loader-word", { yPercent: -110, duration: 0.7 }, 0.55)
@@ -212,25 +212,42 @@ export function FlovroExperience() {
           0.15,
         );
 
-    }, scope);
+      }, scope);
+
+      teardown = () => {
+        media.revert();
+        context.revert();
+      };
+    });
 
     return () => {
-      media.revert();
-      context.revert();
+      cancelled = true;
+      teardown?.();
     };
   }, []);
 
   useEffect(() => {
     const scope = rootRef.current;
     if (!scope) return;
-    const context = gsap.context(() => {
-      gsap.fromTo(
-        ".demo-panel-inner",
-        { autoAlpha: 0, y: 12 },
-        { autoAlpha: 1, y: 0, duration: 0.45, ease: "power3.out" },
-      );
-    }, scope);
-    return () => context.revert();
+    let cancelled = false;
+    let teardown: (() => void) | undefined;
+
+    void loadGsap().then(({ gsap }) => {
+      if (cancelled) return;
+      const context = gsap.context(() => {
+        gsap.fromTo(
+          ".demo-panel-inner",
+          { autoAlpha: 0, y: 12 },
+          { autoAlpha: 1, y: 0, duration: 0.45, ease: "power3.out" },
+        );
+      }, scope);
+      teardown = () => context.revert();
+    });
+
+    return () => {
+      cancelled = true;
+      teardown?.();
+    };
   }, [demoMode]);
 
   const demo = demoModes[demoMode];
