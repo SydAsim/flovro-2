@@ -39,6 +39,34 @@ const services = [
   },
 ];
 
+const agentRoles = [
+  {
+    number: "01",
+    category: "Revenue",
+    title: "AI Sales Agent",
+    text: "Qualifies prospects, handles first questions, follows up, and books the next step.",
+  },
+  {
+    number: "02",
+    category: "Experience",
+    title: "AI Support Agent",
+    text: "Resolves common requests and brings complex conversations to the right person.",
+  },
+  {
+    number: "03",
+    category: "Operations",
+    title: "AI Scheduling Agent",
+    text: "Books, reschedules, confirms, and follows up across connected calendars.",
+  },
+  {
+    number: "04",
+    category: "Logistics",
+    title: "AI Dispatch Agent",
+    text: "Coordinates people, jobs, locations, and real-time customer updates.",
+    featured: true,
+  },
+];
+
 const demoModes = {
   inbound: {
     label: "Inbound call",
@@ -153,6 +181,63 @@ export function FlovroExperience() {
                   scrub: 0.8,
                   invalidateOnRefresh: true,
                 },
+              });
+            }
+
+            const roleSection = scope.querySelector<HTMLElement>(".agent-roles");
+            if (roleSection) {
+              const roleCards = gsap.utils.toArray<HTMLElement>(
+                ".agent-role-card",
+                roleSection,
+              );
+
+              gsap.set(roleCards, {
+                zIndex: (index) => index + 1,
+                transformOrigin: "50% 0%",
+              });
+              gsap.set(roleCards.slice(1), {
+                yPercent: 125,
+                rotation: (index) => (index % 2 === 0 ? 0.8 : -0.7),
+              });
+
+              const roleTimeline = gsap.timeline({
+                defaults: { ease: "none" },
+                scrollTrigger: {
+                  trigger: roleSection,
+                  start: "top top",
+                  end: () => `+=${window.innerHeight * 3.2}`,
+                  pin: true,
+                  pinSpacing: true,
+                  scrub: 0.65,
+                  anticipatePin: 1,
+                  invalidateOnRefresh: true,
+                  refreshPriority: 10,
+                },
+              });
+
+              roleCards.slice(1).forEach((card, index) => {
+                const step = index + 1;
+                const previousCards = roleCards.slice(0, step);
+                const label = `role-${step + 1}`;
+
+                roleTimeline
+                  .addLabel(label, index)
+                  .to(
+                    previousCards,
+                    {
+                      y: (cardIndex) => -(step - cardIndex) * 62,
+                      scale: (cardIndex) => 1 - (step - cardIndex) * 0.018,
+                      autoAlpha: (cardIndex) =>
+                        Math.max(0.22, 1 - (step - cardIndex) * 0.24),
+                      duration: 1,
+                    },
+                    label,
+                  )
+                  .to(
+                    card,
+                    { yPercent: 0, rotation: 0, duration: 1 },
+                    label,
+                  );
               });
             }
           }
@@ -270,6 +355,8 @@ export function FlovroExperience() {
           <div className="hero-grid" />
           <div className="hero-orbit hero-orbit-a" aria-hidden="true" />
           <div className="hero-orbit hero-orbit-b" aria-hidden="true" />
+          <div className="hero-blue-glow" aria-hidden="true" />
+          <div className="hero-transition-wash" aria-hidden="true" />
 
           <div className="hero-copy">
             <p className="eyebrow hero-reveal">
@@ -506,26 +593,36 @@ export function FlovroExperience() {
           </div>
         </section>
 
-        <section className="industries section-pad">
-          <div className="industries-heading reveal">
-            <p className="section-kicker">Built around real work</p>
-            <h2>One intelligence layer.<br />Many business realities.</h2>
-          </div>
-          <div className="industry-list">
-            {[
-              ["Home services", "Emergency calls, dispatch, estimates, follow-up"],
-              ["Healthcare", "Front-desk support, booking, reminders, reactivation"],
-              ["Real estate", "Inquiry qualification, viewings, maintenance routing"],
-              ["Professional services", "Client intake, consultation booking, documents"],
-              ["E-commerce", "Order support, returns, reactivation, segmentation"],
-            ].map(([title, text], index) => (
-              <article className="industry-row reveal" key={title}>
-                <span>0{index + 1}</span>
-                <h3>{title}</h3>
-                <p>{text}</p>
-                <Arrow />
-              </article>
-            ))}
+        <section className="agent-roles" id="roles">
+          <div className="agent-roles-inner">
+            <div className="agent-roles-heading">
+              <p className="section-kicker">
+                <span>03</span> One intelligence. Many roles.
+              </p>
+              <h2>
+                Built around<br />the work—not<br />a single industry.
+              </h2>
+              <p>
+                Every Flovro agent is shaped around the job it needs to perform,
+                the rules it must follow, and the systems it must operate.
+              </p>
+            </div>
+            <div className="agent-role-stack">
+              {agentRoles.map((role) => (
+                <article
+                  className={`agent-role-card${role.featured ? " agent-role-featured" : ""}`}
+                  key={role.number}
+                >
+                  <span className="agent-role-number">{role.number}</span>
+                  <div>
+                    <span className="agent-role-category">{role.category}</span>
+                    <h3>{role.title}</h3>
+                    <p>{role.text}</p>
+                  </div>
+                  <Arrow />
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
