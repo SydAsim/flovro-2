@@ -39,31 +39,42 @@ const services = [
   },
 ];
 
-const agentRoles = [
+const projects = [
   {
     number: "01",
-    category: "Revenue",
-    title: "AI Sales Agent",
-    text: "Qualifies prospects, handles first questions, follows up, and books the next step.",
+    sector: "Home services",
+    title: "Missed-call recovery system",
+    text: "An always-on voice layer that qualifies urgent requests, books the right slot, and updates the operating stack.",
+    metric: "24/7",
+    metricLabel: "response coverage",
+    color: "mint",
   },
   {
     number: "02",
-    category: "Experience",
-    title: "AI Support Agent",
-    text: "Resolves common requests and brings complex conversations to the right person.",
+    sector: "Healthcare",
+    title: "Connected front desk",
+    text: "Patient intake, appointment changes, reminders, and human escalation coordinated in one customer journey.",
+    metric: "01",
+    metricLabel: "connected workflow",
+    color: "blue",
   },
   {
     number: "03",
-    category: "Operations",
-    title: "AI Scheduling Agent",
-    text: "Books, reschedules, confirms, and follows up across connected calendars.",
+    sector: "Property operations",
+    title: "Lead and maintenance routing",
+    text: "New inquiries and resident requests are understood, prioritized, and routed without manual inbox triage.",
+    metric: "<2s",
+    metricLabel: "first response",
+    color: "lime",
   },
   {
     number: "04",
-    category: "Logistics",
-    title: "AI Dispatch Agent",
-    text: "Coordinates people, jobs, locations, and real-time customer updates.",
-    featured: true,
+    sector: "Professional services",
+    title: "Client intake workspace",
+    text: "A conversion-focused website, qualification assistant, and internal handoff flow built as one digital system.",
+    metric: "1x",
+    metricLabel: "source of truth",
+    color: "violet",
   },
 ];
 
@@ -119,6 +130,7 @@ function Arrow() {
 export function FlovroExperience() {
   const rootRef = useRef<HTMLDivElement>(null);
   const serviceTrackRef = useRef<HTMLDivElement>(null);
+  const projectRailRef = useRef<HTMLDivElement>(null);
   const [demoMode, setDemoMode] = useState<DemoMode>("inbound");
 
   useEffect(() => {
@@ -126,6 +138,7 @@ export function FlovroExperience() {
     if (!scope) return;
     let cancelled = false;
     let teardown: (() => void) | undefined;
+    let refreshFrame = 0;
 
     void loadGsap().then(({ gsap, ScrollTrigger }) => {
       if (cancelled) return;
@@ -178,68 +191,33 @@ export function FlovroExperience() {
                   start: "top top",
                   end: () => `+=${distance() + window.innerHeight * 0.55}`,
                   pin: true,
-                  scrub: 0.8,
-                  invalidateOnRefresh: true,
-                },
-              });
-            }
-
-            const roleSection = scope.querySelector<HTMLElement>(".agent-roles");
-            if (roleSection) {
-              const roleCards = gsap.utils.toArray<HTMLElement>(
-                ".agent-role-card",
-                roleSection,
-              );
-
-              gsap.set(roleCards, {
-                zIndex: (index) => index + 1,
-                transformOrigin: "50% 0%",
-              });
-              gsap.set(roleCards.slice(1), {
-                yPercent: 125,
-                rotation: (index) => (index % 2 === 0 ? 0.8 : -0.7),
-              });
-
-              const roleTimeline = gsap.timeline({
-                defaults: { ease: "none" },
-                scrollTrigger: {
-                  trigger: roleSection,
-                  start: "top top",
-                  end: () => `+=${window.innerHeight * 3.2}`,
-                  pin: true,
                   pinSpacing: true,
-                  scrub: 0.65,
+                  scrub: 0.8,
                   anticipatePin: 1,
                   invalidateOnRefresh: true,
-                  refreshPriority: 10,
+                  refreshPriority: 0,
                 },
               });
-
-              roleCards.slice(1).forEach((card, index) => {
-                const step = index + 1;
-                const previousCards = roleCards.slice(0, step);
-                const label = `role-${step + 1}`;
-
-                roleTimeline
-                  .addLabel(label, index)
-                  .to(
-                    previousCards,
-                    {
-                      y: (cardIndex) => -(step - cardIndex) * 62,
-                      scale: (cardIndex) => 1 - (step - cardIndex) * 0.018,
-                      autoAlpha: (cardIndex) =>
-                        Math.max(0.22, 1 - (step - cardIndex) * 0.24),
-                      duration: 1,
-                    },
-                    label,
-                  )
-                  .to(
-                    card,
-                    { yPercent: 0, rotation: 0, duration: 1 },
-                    label,
-                  );
-              });
             }
+          }
+
+          if (!reduceMotion) {
+            gsap.fromTo(
+              ".project-card",
+              { y: 48, autoAlpha: 0 },
+              {
+                y: 0,
+                autoAlpha: 1,
+                duration: 0.9,
+                stagger: 0.1,
+                ease: "flovroEase",
+                scrollTrigger: {
+                  trigger: ".projects-section",
+                  start: "top 76%",
+                  once: true,
+                },
+              },
+            );
           }
         },
       );
@@ -284,7 +262,13 @@ export function FlovroExperience() {
 
       }, scope);
 
+      refreshFrame = window.requestAnimationFrame(() => {
+        ScrollTrigger.sort();
+        ScrollTrigger.refresh();
+      });
+
       teardown = () => {
+        window.cancelAnimationFrame(refreshFrame);
         media.revert();
         context.revert();
       };
@@ -322,6 +306,15 @@ export function FlovroExperience() {
 
   const demo = demoModes[demoMode];
 
+  const scrollProjects = (direction: -1 | 1) => {
+    const rail = projectRailRef.current;
+    if (!rail) return;
+    rail.scrollBy({
+      left: direction * Math.max(320, rail.clientWidth * 0.78),
+      behavior: "smooth",
+    });
+  };
+
   return (
     <div className="site-shell" ref={rootRef}>
       <div className="intro-curtain" aria-hidden="true">
@@ -342,6 +335,7 @@ export function FlovroExperience() {
         <nav aria-label="Primary navigation">
           <a href="#systems">Systems</a>
           <a href="#difference">Difference</a>
+          <a href="#projects">Projects</a>
           <a href="#process">Process</a>
         </nav>
         <a className="nav-cta" href="#contact">
@@ -355,8 +349,6 @@ export function FlovroExperience() {
           <div className="hero-grid" />
           <div className="hero-orbit hero-orbit-a" aria-hidden="true" />
           <div className="hero-orbit hero-orbit-b" aria-hidden="true" />
-          <div className="hero-blue-glow" aria-hidden="true" />
-          <div className="hero-transition-wash" aria-hidden="true" />
 
           <div className="hero-copy">
             <p className="eyebrow hero-reveal">
@@ -413,24 +405,6 @@ export function FlovroExperience() {
           </div>
         </section>
 
-        <section className="manifesto section-pad">
-          <div className="section-kicker reveal">Why Flovro</div>
-          <div className="manifesto-copy reveal">
-            <p>
-              A missed call is not just a call. It is a customer, a booking, a
-              job, a relationship.
-            </p>
-            <p>
-              We connect the entire journey—from first contact to the next best
-              action—so opportunity keeps moving even when your team is busy.
-            </p>
-          </div>
-          <div className="manifesto-note reveal">
-            <span>Not another disconnected tool.</span>
-            <span>A working system around your business.</span>
-          </div>
-        </section>
-
         <section className="systems-section" id="systems">
           <div className="systems-inner">
             <div className="systems-heading">
@@ -470,6 +444,24 @@ export function FlovroExperience() {
                 </article>
               ))}
             </div>
+          </div>
+        </section>
+
+        <section className="manifesto section-pad">
+          <div className="section-kicker reveal">Why Flovro</div>
+          <div className="manifesto-copy reveal">
+            <p>
+              A missed call is not just a call. It is a customer, a booking, a
+              job, a relationship.
+            </p>
+            <p>
+              We connect the entire journey—from first contact to the next best
+              action—so opportunity keeps moving even when your team is busy.
+            </p>
+          </div>
+          <div className="manifesto-note">
+            <span>Not another disconnected tool.</span>
+            <span>A working system around your business.</span>
           </div>
         </section>
 
@@ -593,37 +585,79 @@ export function FlovroExperience() {
           </div>
         </section>
 
-        <section className="agent-roles" id="roles">
-          <div className="agent-roles-inner">
-            <div className="agent-roles-heading">
-              <p className="section-kicker">
-                <span>03</span> One intelligence. Many roles.
-              </p>
-              <h2>
-                Built around<br />the work—not<br />a single industry.
-              </h2>
-              <p>
-                Every Flovro agent is shaped around the job it needs to perform,
-                the rules it must follow, and the systems it must operate.
-              </p>
+        <section className="industries section-pad">
+          <div className="industries-heading reveal">
+            <p className="section-kicker">Built around real work</p>
+            <h2>One intelligence layer.<br />Many business realities.</h2>
+          </div>
+          <div className="industry-list">
+            {[
+              ["Home services", "Emergency calls, dispatch, estimates, follow-up"],
+              ["Healthcare", "Front-desk support, booking, reminders, reactivation"],
+              ["Real estate", "Inquiry qualification, viewings, maintenance routing"],
+              ["Professional services", "Client intake, consultation booking, documents"],
+              ["E-commerce", "Order support, returns, reactivation, segmentation"],
+            ].map(([title, text], index) => (
+              <article className="industry-row reveal" key={title}>
+                <span>0{index + 1}</span>
+                <h3>{title}</h3>
+                <p>{text}</p>
+                <Arrow />
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="projects-section section-pad" id="projects">
+          <div className="projects-heading">
+            <div>
+              <p className="section-kicker">Selected systems</p>
+              <h2>Projects designed<br />to keep work moving.</h2>
             </div>
-            <div className="agent-role-stack">
-              {agentRoles.map((role) => (
-                <article
-                  className={`agent-role-card${role.featured ? " agent-role-featured" : ""}`}
-                  key={role.number}
-                >
-                  <span className="agent-role-number">{role.number}</span>
-                  <div>
-                    <span className="agent-role-category">{role.category}</span>
-                    <h3>{role.title}</h3>
-                    <p>{role.text}</p>
-                  </div>
-                  <Arrow />
-                </article>
-              ))}
+            <div className="project-controls" aria-label="Project navigation">
+              <button
+                type="button"
+                onClick={() => scrollProjects(-1)}
+                aria-label="Previous projects"
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollProjects(1)}
+                aria-label="Next projects"
+              >
+                →
+              </button>
             </div>
           </div>
+          <div className="project-rail" ref={projectRailRef}>
+            {projects.map((project) => (
+              <article
+                className={`project-card project-${project.color}`}
+                key={project.number}
+              >
+                <div className="project-card-top">
+                  <span>{project.number}</span>
+                  <span>{project.sector}</span>
+                </div>
+                <div className="project-visual" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </div>
+                <div className="project-card-copy">
+                  <h3>{project.title}</h3>
+                  <p>{project.text}</p>
+                </div>
+                <div className="project-metric">
+                  <strong>{project.metric}</strong>
+                  <span>{project.metricLabel}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+          <p className="project-scroll-note">Scroll sideways or use the arrows</p>
         </section>
 
         <section className="process section-pad" id="process">
