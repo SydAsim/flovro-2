@@ -19,7 +19,6 @@ export function SignalField() {
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
-    const hero = host.closest<HTMLElement>(".hero");
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
     camera.position.set(0, 0, 7.6);
@@ -34,10 +33,8 @@ export function SignalField() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     host.appendChild(renderer.domElement);
 
-    const scrollRig = new THREE.Group();
     const signal = new THREE.Group();
-    scene.add(scrollRig);
-    scrollRig.add(signal);
+    scene.add(signal);
 
     const coreGeometry = new THREE.IcosahedronGeometry(1.18, 4);
     const coreMaterial = new THREE.MeshBasicMaterial({
@@ -154,7 +151,7 @@ export function SignalField() {
 
     const context = gsap.context(() => {
       gsap.set(signal.scale, { x: 0.12, y: 0.12, z: 0.12 });
-      const visualTimeline = gsap
+      gsap
         .timeline({ defaults: { ease: "power4.out" } })
         .to(signal.scale, { x: 1, y: 1, z: 1, duration: 1.9 }, 0.35)
         .fromTo(
@@ -170,24 +167,23 @@ export function SignalField() {
           0.25,
         );
 
-      if (!reduceMotion && hero) {
-        const orbitA = hero.querySelector<HTMLElement>(".hero-orbit-a");
-        const orbitB = hero.querySelector<HTMLElement>(".hero-orbit-b");
-
-        visualTimeline
-          .to(camera.position, { z: 6.6, duration: 1.35, ease: "power2.inOut" }, 1.9)
+      if (!reduceMotion) {
+        gsap
+          .timeline({
+            scrollTrigger: {
+              trigger: host,
+              start: "top top",
+              end: "bottom top",
+              scrub: 1,
+            },
+          })
+          .to(camera.position, { z: 5.2, duration: 1, ease: "none" }, 0)
           .to(
-            scrollRig.rotation,
-            { y: Math.PI * 0.34, x: -0.1, duration: 1.35, ease: "power2.inOut" },
-            1.9,
+            signal.rotation,
+            { y: Math.PI * 0.72, x: -0.28, duration: 1, ease: "none" },
+            0,
           )
-          .to(
-            scrollRig.scale,
-            { x: 1.08, y: 1.08, z: 1.08, duration: 1.35, ease: "power2.inOut" },
-            1.9,
-          )
-          .to(orbitA, { scale: 1.08, rotation: 12, duration: 1.35 }, 1.9)
-          .to(orbitB, { scale: 1.05, rotation: -8, duration: 1.35 }, 1.9);
+          .to(signal.scale, { x: 1.36, y: 1.36, z: 1.36, ease: "none" }, 0);
       }
     }, host);
 

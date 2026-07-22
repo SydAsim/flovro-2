@@ -110,7 +110,7 @@ button {
 }
 
 .nav-shell {
-  position: absolute;
+  position: fixed;
   top: 18px;
   left: 50%;
   z-index: 50;
@@ -213,20 +213,6 @@ button {
   isolation: isolate;
 }
 
-@media (min-width: 900px) {
-  .hero-scroll-shell {
-    position: relative;
-    background: #06130f;
-  }
-
-  .hero {
-    position: relative;
-    height: 100svh;
-    min-height: 700px;
-    overflow: hidden;
-  }
-}
-
 .hero-grid,
 .proof-grid-bg {
   position: absolute;
@@ -248,7 +234,6 @@ button {
   height: 100%;
   pointer-events: none;
   filter: saturate(1.05);
-  will-change: transform, opacity;
 }
 
 .signal-field canvas {
@@ -543,7 +528,6 @@ button {
 .flow-heading h2,
 .proof-top h2,
 .industries-heading h2,
-.projects-heading h2,
 .process-heading h2,
 .contact-content h2 {
   margin: 22px 0 0;
@@ -566,29 +550,7 @@ button {
   gap: 16px;
   width: max-content;
   padding: 0 72px;
-}
-
-.service-rail {
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 12px;
-  scroll-behavior: smooth;
-  scroll-snap-type: x proximity;
-  scrollbar-color: rgba(139, 255, 208, 0.32) transparent;
-  scrollbar-width: thin;
-}
-
-.service-rail::-webkit-scrollbar {
-  height: 6px;
-}
-
-.service-rail::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.service-rail::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(139, 255, 208, 0.32);
+  will-change: transform;
 }
 
 .service-card {
@@ -602,7 +564,6 @@ button {
   border: 1px solid var(--white-line);
   border-radius: 22px;
   background: #0b211a;
-  scroll-snap-align: start;
 }
 
 .service-card-top {
@@ -1132,198 +1093,6 @@ button {
   font-size: 16px;
 }
 
-.projects-section {
-  overflow: hidden;
-  padding-top: clamp(100px, 12vw, 170px);
-  padding-right: 0;
-  padding-bottom: clamp(100px, 12vw, 170px);
-  background: #071a14;
-}
-
-.projects-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 48px;
-  padding-right: clamp(24px, 4vw, 72px);
-  margin-bottom: 70px;
-}
-
-.projects-heading h2 {
-  margin-top: 20px;
-}
-
-.project-controls {
-  display: flex;
-  gap: 8px;
-}
-
-.project-controls button {
-  display: grid;
-  width: 52px;
-  height: 52px;
-  padding: 0;
-  border: 1px solid var(--white-line);
-  border-radius: 50%;
-  background: transparent;
-  color: var(--paper);
-  font-size: 20px;
-  cursor: pointer;
-  place-items: center;
-  transition: background 200ms ease, color 200ms ease, transform 200ms ease;
-}
-
-.project-controls button:hover,
-.project-controls button:focus-visible {
-  background: var(--mint);
-  color: var(--ink);
-  transform: translateY(-2px);
-}
-
-.project-rail {
-  display: flex;
-  gap: 16px;
-  padding-right: clamp(24px, 4vw, 72px);
-  padding-bottom: 22px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-behavior: smooth;
-  scroll-snap-type: x mandatory;
-  scrollbar-color: var(--mint) rgba(240, 243, 233, 0.12);
-  scrollbar-width: thin;
-}
-
-.project-rail::-webkit-scrollbar {
-  height: 5px;
-}
-
-.project-rail::-webkit-scrollbar-track {
-  background: rgba(240, 243, 233, 0.1);
-}
-
-.project-rail::-webkit-scrollbar-thumb {
-  background: var(--mint);
-  border-radius: 100px;
-}
-
-.project-card {
-  position: relative;
-  display: grid;
-  flex: 0 0 min(70vw, 820px);
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto 1fr auto;
-  min-height: 560px;
-  padding: clamp(24px, 3vw, 42px);
-  overflow: hidden;
-  border: 1px solid var(--white-line);
-  border-radius: 24px;
-  background: #0b211a;
-  color: var(--paper);
-  scroll-snap-align: start;
-  will-change: transform, opacity;
-}
-
-.project-card-top {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  grid-column: 1 / -1;
-  justify-content: space-between;
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-}
-
-.project-visual {
-  position: absolute;
-  top: 10%;
-  right: 3%;
-  width: 54%;
-  aspect-ratio: 1;
-  color: var(--mint);
-}
-
-.project-visual i {
-  position: absolute;
-  inset: 18%;
-  display: block;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-}
-
-.project-visual i:nth-child(2) {
-  inset: 28% 9%;
-  border-radius: 42% 58% 62% 38%;
-  opacity: 0.42;
-  transform: rotate(28deg);
-}
-
-.project-visual i:nth-child(3) {
-  inset: 38%;
-  border-radius: 28%;
-  background: currentColor;
-  opacity: 0.18;
-  transform: rotate(45deg);
-}
-
-.project-blue .project-visual { color: var(--blue); }
-.project-lime .project-visual { color: var(--lime); }
-.project-violet .project-visual { color: var(--violet); }
-
-.project-card-copy {
-  position: relative;
-  z-index: 2;
-  align-self: end;
-  max-width: 570px;
-}
-
-.project-card-copy h3 {
-  margin: 0 0 22px;
-  font-size: clamp(2.6rem, 4.2vw, 5.5rem);
-  font-weight: 450;
-  line-height: 0.94;
-  letter-spacing: -0.06em;
-}
-
-.project-card-copy p {
-  max-width: 500px;
-  margin: 0;
-  color: rgba(240, 243, 233, 0.52);
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.project-metric {
-  position: relative;
-  z-index: 2;
-  align-self: end;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding-left: 24px;
-  border-left: 1px solid var(--white-line);
-}
-
-.project-metric strong {
-  font-size: clamp(2.2rem, 3vw, 4rem);
-  font-weight: 450;
-  letter-spacing: -0.06em;
-}
-
-.project-metric span,
-.project-scroll-note {
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 8px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.project-scroll-note {
-  margin: 18px 0 0;
-  color: rgba(240, 243, 233, 0.42);
-}
-
 .process {
   padding-top: clamp(110px, 13vw, 180px);
   padding-bottom: clamp(110px, 13vw, 180px);
@@ -1595,14 +1364,6 @@ button {
     scroll-snap-align: center;
   }
 
-  .projects-heading {
-    align-items: flex-start;
-  }
-
-  .project-card {
-    flex-basis: min(86vw, 680px);
-  }
-
   .flow-section {
     grid-template-columns: 1fr;
   }
@@ -1711,7 +1472,6 @@ button {
   .flow-heading h2,
   .proof-top h2,
   .industries-heading h2,
-  .projects-heading h2,
   .process-heading h2,
   .contact-content h2 {
     font-size: clamp(2.7rem, 13vw, 4.5rem);
@@ -1821,41 +1581,6 @@ button {
 
   .industry-row h3 {
     font-size: 1.8rem;
-  }
-
-  .projects-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    margin-bottom: 48px;
-  }
-
-  .project-controls {
-    align-self: flex-end;
-  }
-
-  .project-card {
-    flex-basis: 88vw;
-    grid-template-columns: 1fr;
-    min-height: 500px;
-  }
-
-  .project-visual {
-    top: 9%;
-    right: -10%;
-    width: 78%;
-    opacity: 0.72;
-  }
-
-  .project-card-copy h3 {
-    font-size: clamp(2.6rem, 12vw, 4rem);
-  }
-
-  .project-metric {
-    margin-top: 30px;
-    padding-top: 18px;
-    padding-left: 0;
-    border-top: 1px solid var(--white-line);
-    border-left: 0;
   }
 
   .process-card {
