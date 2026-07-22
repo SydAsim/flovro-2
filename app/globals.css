@@ -234,6 +234,7 @@ button {
   height: 100%;
   pointer-events: none;
   filter: saturate(1.05);
+  will-change: transform, opacity;
 }
 
 .signal-field canvas {
