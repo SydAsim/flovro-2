@@ -191,7 +191,7 @@ export function SignalField() {
             scrub: 0.65,
             anticipatePin: 1,
             invalidateOnRefresh: true,
-            refreshPriority: -10,
+            refreshPriority: 20,
           },
         });
 

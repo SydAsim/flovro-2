@@ -195,7 +195,7 @@ export function FlovroExperience() {
                   scrub: 0.8,
                   anticipatePin: 1,
                   invalidateOnRefresh: true,
-                  refreshPriority: 0,
+                  refreshPriority: 10,
                 },
               });
             }
