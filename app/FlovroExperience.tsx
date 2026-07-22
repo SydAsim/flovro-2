@@ -129,7 +129,6 @@ function Arrow() {
 
 export function FlovroExperience() {
   const rootRef = useRef<HTMLDivElement>(null);
-  const serviceTrackRef = useRef<HTMLDivElement>(null);
   const projectRailRef = useRef<HTMLDivElement>(null);
   const [demoMode, setDemoMode] = useState<DemoMode>("inbound");
 
@@ -149,6 +148,7 @@ export function FlovroExperience() {
         .to(".loader-word", { yPercent: -110, duration: 0.7 }, 0.55)
         .to(".loader-line", { scaleX: 1, duration: 0.9 }, 0.05)
         .to(".intro-curtain", { yPercent: -100, duration: 1.05 }, 0.9)
+        .set(".intro-curtain", { display: "none" }, 1.96)
         .fromTo(
           ".nav-shell",
           { y: -28, autoAlpha: 0 },
@@ -170,36 +170,12 @@ export function FlovroExperience() {
 
       media.add(
         {
-          desktop: "(min-width: 900px)",
           reduceMotion: "(prefers-reduced-motion: reduce)",
         },
         (context) => {
-          const { desktop, reduceMotion } = context.conditions as {
-            desktop: boolean;
+          const { reduceMotion } = context.conditions as {
             reduceMotion: boolean;
           };
-
-          if (desktop && !reduceMotion) {
-            const track = serviceTrackRef.current;
-            if (track) {
-              const distance = () => Math.max(0, track.scrollWidth - window.innerWidth + 72);
-              gsap.to(track, {
-                x: () => -distance(),
-                ease: "none",
-                scrollTrigger: {
-                  trigger: ".systems-section",
-                  start: "top top",
-                  end: () => `+=${distance() + window.innerHeight * 0.55}`,
-                  pin: true,
-                  pinSpacing: true,
-                  scrub: 0.8,
-                  anticipatePin: 1,
-                  invalidateOnRefresh: true,
-                  refreshPriority: 10,
-                },
-              });
-            }
-          }
 
           if (!reduceMotion) {
             gsap.fromTo(
@@ -344,66 +320,68 @@ export function FlovroExperience() {
       </header>
 
       <main>
-        <section className="hero" id="top">
-          <SignalField />
-          <div className="hero-grid" />
-          <div className="hero-orbit hero-orbit-a" aria-hidden="true" />
-          <div className="hero-orbit hero-orbit-b" aria-hidden="true" />
+        <div className="hero-scroll-shell">
+          <section className="hero" id="top">
+            <SignalField />
+            <div className="hero-grid" />
+            <div className="hero-orbit hero-orbit-a" aria-hidden="true" />
+            <div className="hero-orbit hero-orbit-b" aria-hidden="true" />
 
-          <div className="hero-copy">
-            <p className="eyebrow hero-reveal">
-              <span className="live-dot" /> AI systems that stay awake
-            </p>
-            <h1>
-              <span className="hero-line">
-                <span>Every conversation.</span>
-              </span>
-              <span className="hero-line hero-line-indent">
-                <span>Every workflow.</span>
-              </span>
-              <span className="hero-line hero-line-accent">
-                <span>In motion.</span>
-              </span>
-            </h1>
-            <div className="hero-bottom hero-reveal">
-              <p>
-                Flovro builds voice agents, connected automations, and digital
-                products that help businesses respond faster and operate with
-                less friction.
+            <div className="hero-copy">
+              <p className="eyebrow hero-reveal">
+                <span className="live-dot" /> AI systems that stay awake
               </p>
-              <a className="circle-link" href="#systems" aria-label="Explore our systems">
-                <span>Explore</span>
-                <Arrow />
-              </a>
+              <h1>
+                <span className="hero-line">
+                  <span>Every conversation.</span>
+                </span>
+                <span className="hero-line hero-line-indent">
+                  <span>Every workflow.</span>
+                </span>
+                <span className="hero-line hero-line-accent">
+                  <span>In motion.</span>
+                </span>
+              </h1>
+              <div className="hero-bottom hero-reveal">
+                <p>
+                  Flovro builds voice agents, connected automations, and digital
+                  products that help businesses respond faster and operate with
+                  less friction.
+                </p>
+                <a className="circle-link" href="#systems" aria-label="Explore our systems">
+                  <span>Explore</span>
+                  <Arrow />
+                </a>
+              </div>
             </div>
-          </div>
 
-          <aside className="hero-side hero-reveal" aria-label="Core capabilities">
-            <span>Voice</span>
-            <span>Automate</span>
-            <span>Build</span>
-          </aside>
+            <aside className="hero-side hero-reveal" aria-label="Core capabilities">
+              <span>Voice</span>
+              <span>Automate</span>
+              <span>Build</span>
+            </aside>
 
-          <div className="hero-status hero-reveal">
-            <div>
-              <strong>24/7</strong>
-              <span>Customer response</span>
+            <div className="hero-status hero-reveal">
+              <div>
+                <strong>24/7</strong>
+                <span>Customer response</span>
+              </div>
+              <div>
+                <strong>&lt;2s</strong>
+                <span>Answer speed</span>
+              </div>
+              <div>
+                <strong>01</strong>
+                <span>Connected stack</span>
+              </div>
             </div>
-            <div>
-              <strong>&lt;2s</strong>
-              <span>Answer speed</span>
-            </div>
-            <div>
-              <strong>01</strong>
-              <span>Connected stack</span>
-            </div>
-          </div>
 
-          <div className="scroll-cue hero-reveal" aria-hidden="true">
-            <span>Scroll to move</span>
-            <i />
-          </div>
-        </section>
+            <div className="scroll-cue hero-reveal" aria-hidden="true">
+              <span>Scroll to move</span>
+              <i />
+            </div>
+          </section>
+        </div>
 
         <section className="systems-section" id="systems">
           <div className="systems-inner">
@@ -417,32 +395,34 @@ export function FlovroExperience() {
                 to transform what happens next.
               </p>
             </div>
-            <div className="service-track" ref={serviceTrackRef}>
-              {services.map((service) => (
-                <article
-                  className={`service-card service-${service.color}`}
-                  key={service.number}
-                >
-                  <div className="service-card-top">
-                    <span>{service.number}</span>
-                    <span>{service.label}</span>
-                  </div>
-                  <div className="service-graphic" aria-hidden="true">
-                    <i />
-                    <i />
-                    <i />
-                  </div>
-                  <div className="service-card-copy">
-                    <h3>{service.title}</h3>
-                    <p>{service.text}</p>
-                  </div>
-                  <div className="tag-row">
-                    {service.tags.map((tag) => (
-                      <span key={tag}>{tag}</span>
-                    ))}
-                  </div>
-                </article>
-              ))}
+            <div className="service-rail" aria-label="Flovro systems" tabIndex={0}>
+              <div className="service-track">
+                {services.map((service) => (
+                  <article
+                    className={`service-card service-${service.color}`}
+                    key={service.number}
+                  >
+                    <div className="service-card-top">
+                      <span>{service.number}</span>
+                      <span>{service.label}</span>
+                    </div>
+                    <div className="service-graphic" aria-hidden="true">
+                      <i />
+                      <i />
+                      <i />
+                    </div>
+                    <div className="service-card-copy">
+                      <h3>{service.title}</h3>
+                      <p>{service.text}</p>
+                    </div>
+                    <div className="tag-row">
+                      {service.tags.map((tag) => (
+                        <span key={tag}>{tag}</span>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
           </div>
         </section>

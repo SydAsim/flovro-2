@@ -12,9 +12,8 @@ export function SignalField() {
     if (!host) return;
     let cancelled = false;
     let teardown: (() => void) | undefined;
-    let refreshFrame = 0;
 
-    void loadGsap().then(({ gsap, ScrollTrigger }) => {
+    void loadGsap().then(({ gsap }) => {
       if (cancelled) return;
 
     const reduceMotion = window.matchMedia(
@@ -155,7 +154,7 @@ export function SignalField() {
 
     const context = gsap.context(() => {
       gsap.set(signal.scale, { x: 0.12, y: 0.12, z: 0.12 });
-      gsap
+      const visualTimeline = gsap
         .timeline({ defaults: { ease: "power4.out" } })
         .to(signal.scale, { x: 1, y: 1, z: 1, duration: 1.9 }, 0.35)
         .fromTo(
@@ -172,52 +171,25 @@ export function SignalField() {
         );
 
       if (!reduceMotion && hero) {
-        const canPinHero = window.matchMedia("(min-width: 900px)").matches;
-        const scrollCue = hero.querySelector<HTMLElement>(".scroll-cue");
         const orbitA = hero.querySelector<HTMLElement>(".hero-orbit-a");
         const orbitB = hero.querySelector<HTMLElement>(".hero-orbit-b");
 
-        const heroTimeline = gsap.timeline({
-          defaults: { ease: "none" },
-          scrollTrigger: {
-            trigger: hero,
-            start: "top top",
-            end: () =>
-              canPinHero
-                ? `+=${Math.max(window.innerHeight * 1.55, 1200)}`
-                : "bottom top",
-            pin: canPinHero,
-            pinSpacing: true,
-            scrub: 0.65,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
-            refreshPriority: 20,
-          },
-        });
-
-        heroTimeline
-          .addLabel("focus", 0)
-          .to(scrollCue, { autoAlpha: 0, duration: 0.1 }, "focus")
-          .to(camera.position, { z: 5.05, duration: 1 }, "focus")
+        visualTimeline
+          .to(camera.position, { z: 6.6, duration: 1.35, ease: "power2.inOut" }, 1.9)
           .to(
             scrollRig.rotation,
-            { y: Math.PI * 0.76, x: -0.18, duration: 1 },
-            "focus",
+            { y: Math.PI * 0.34, x: -0.1, duration: 1.35, ease: "power2.inOut" },
+            1.9,
           )
           .to(
             scrollRig.scale,
-            { x: 1.24, y: 1.24, z: 1.24, duration: 1 },
-            "focus",
+            { x: 1.08, y: 1.08, z: 1.08, duration: 1.35, ease: "power2.inOut" },
+            1.9,
           )
-          .to(orbitA, { scale: 1.18, rotation: 18, duration: 1 }, "focus")
-          .to(orbitB, { scale: 1.1, rotation: -12, duration: 1 }, "focus");
+          .to(orbitA, { scale: 1.08, rotation: 12, duration: 1.35 }, 1.9)
+          .to(orbitB, { scale: 1.05, rotation: -8, duration: 1.35 }, 1.9);
       }
     }, host);
-
-    refreshFrame = window.requestAnimationFrame(() => {
-      ScrollTrigger.sort();
-      ScrollTrigger.refresh();
-    });
 
     let frame = 0;
     const clock = new THREE.Clock();
@@ -239,7 +211,6 @@ export function SignalField() {
 
     teardown = () => {
       window.cancelAnimationFrame(frame);
-      window.cancelAnimationFrame(refreshFrame);
       window.removeEventListener("pointermove", onPointerMove);
       resizeObserver.disconnect();
       context.revert();

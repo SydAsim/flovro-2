@@ -110,7 +110,7 @@ button {
 }
 
 .nav-shell {
-  position: fixed;
+  position: absolute;
   top: 18px;
   left: 50%;
   z-index: 50;
@@ -214,7 +214,13 @@ button {
 }
 
 @media (min-width: 900px) {
+  .hero-scroll-shell {
+    position: relative;
+    background: #06130f;
+  }
+
   .hero {
+    position: relative;
     height: 100svh;
     min-height: 700px;
     overflow: hidden;
@@ -560,7 +566,29 @@ button {
   gap: 16px;
   width: max-content;
   padding: 0 72px;
-  will-change: transform;
+}
+
+.service-rail {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 12px;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  scrollbar-color: rgba(139, 255, 208, 0.32) transparent;
+  scrollbar-width: thin;
+}
+
+.service-rail::-webkit-scrollbar {
+  height: 6px;
+}
+
+.service-rail::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.service-rail::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(139, 255, 208, 0.32);
 }
 
 .service-card {
@@ -574,6 +602,7 @@ button {
   border: 1px solid var(--white-line);
   border-radius: 22px;
   background: #0b211a;
+  scroll-snap-align: start;
 }
 
 .service-card-top {
