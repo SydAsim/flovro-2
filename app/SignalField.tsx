@@ -190,7 +190,7 @@ export function SignalField() {
                 : "bottom top",
             pin: canPinHero,
             pinSpacing: true,
-            scrub: 0.9,
+            scrub: true,
             anticipatePin: 1,
             invalidateOnRefresh: true,
             refreshPriority: -10,
