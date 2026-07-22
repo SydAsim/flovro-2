@@ -546,12 +546,33 @@ button {
   line-height: 1.6;
 }
 
+.service-rail {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 12px;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: rgba(139, 255, 208, 0.45) transparent;
+  scrollbar-width: thin;
+}
+
+.service-rail::-webkit-scrollbar {
+  height: 6px;
+}
+
+.service-rail::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.service-rail::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(139, 255, 208, 0.45);
+}
+
 .service-track {
   display: flex;
   gap: 16px;
   width: max-content;
   padding: 0 72px;
-  will-change: transform;
 }
 
 .service-card {
@@ -565,6 +586,7 @@ button {
   border: 1px solid var(--white-line);
   border-radius: 22px;
   background: #0b211a;
+  scroll-snap-align: start;
 }
 
 .service-card-top {
@@ -1353,9 +1375,10 @@ button {
   }
 
   .service-track {
-    width: 100%;
     padding: 0 24px;
-    overflow-x: auto;
+  }
+
+  .service-rail {
     scroll-snap-type: x mandatory;
   }
 

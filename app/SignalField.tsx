@@ -152,9 +152,11 @@ export function SignalField() {
     };
     window.addEventListener("pointermove", onPointerMove, { passive: true });
 
+    let restoreHeroScroll: (() => void) | undefined;
+
     const context = gsap.context(() => {
       gsap.set(signal.scale, { x: 0.12, y: 0.12, z: 0.12 });
-      gsap
+      const entranceTimeline = gsap
         .timeline({ defaults: { ease: "power4.out" } })
         .to(signal.scale, { x: 1, y: 1, z: 1, duration: 1.9 }, 0.35)
         .fromTo(
@@ -171,30 +173,42 @@ export function SignalField() {
         );
 
       if (!reduceMotion && hero) {
-        const canPinHero = window.matchMedia("(min-width: 900px)").matches;
-        const heroCopy = hero.querySelector<HTMLElement>(".hero-copy");
-        const heroSide = hero.querySelector<HTMLElement>(".hero-side");
-        const heroStatus = hero.querySelector<HTMLElement>(".hero-status");
         const scrollCue = hero.querySelector<HTMLElement>(".scroll-cue");
         const orbitA = hero.querySelector<HTMLElement>(".hero-orbit-a");
         const orbitB = hero.querySelector<HTMLElement>(".hero-orbit-b");
+        const nextSection = hero.nextElementSibling as HTMLElement | null;
+        const root = document.documentElement;
+        const body = document.body;
+        const lockAtTop = window.scrollY <= hero.offsetTop + 4;
+        const previousRootOverflow = root.style.overflow;
+        const previousBodyOverflow = body.style.overflow;
+        let lockActive = lockAtTop;
+        let pendingAdvance = false;
+        let touchY = 0;
+        let detachIntentListeners = () => {};
+
+        const unlockHero = () => {
+          if (!lockActive) return;
+          lockActive = false;
+          root.style.overflow = previousRootOverflow;
+          body.style.overflow = previousBodyOverflow;
+          detachIntentListeners();
+        };
+
+        const finishHero = () => {
+          const shouldAdvance = lockActive && pendingAdvance;
+          unlockHero();
+          if (shouldAdvance) {
+            window.requestAnimationFrame(() => {
+              nextSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+          }
+        };
 
         const heroTimeline = gsap.timeline({
+          paused: true,
           defaults: { ease: "none" },
-          scrollTrigger: {
-            trigger: hero,
-            start: "top top",
-            end: () =>
-              canPinHero
-                ? `+=${Math.max(window.innerHeight * 2.4, 1700)}`
-                : "bottom top",
-            pin: canPinHero,
-            pinSpacing: true,
-            scrub: true,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
-            refreshPriority: -10,
-          },
+          onComplete: finishHero,
         });
 
         heroTimeline
@@ -213,12 +227,55 @@ export function SignalField() {
           )
           .to(orbitA, { scale: 1.2, rotation: 18, duration: 0.78 }, "focus")
           .to(orbitB, { scale: 1.12, rotation: -12, duration: 0.78 }, "focus")
-          .addLabel("release", 0.78)
-          .to(heroCopy, { y: -48, autoAlpha: 0.12, duration: 0.18 }, "release")
-          .to(heroSide, { y: -30, autoAlpha: 0, duration: 0.18 }, "release")
-          .to(heroStatus, { y: 24, autoAlpha: 0, duration: 0.18 }, "release")
-          .to(host, { scale: 1.06, autoAlpha: 0.3, duration: 0.18 }, "release")
-          .to({}, { duration: 0.04 });
+          .to({}, { duration: 0.18 });
+
+        const onWheelIntent = (event: WheelEvent) => {
+          if (event.deltaY > 0) pendingAdvance = true;
+        };
+
+        const onKeyIntent = (event: KeyboardEvent) => {
+          const target = event.target as HTMLElement | null;
+          if (
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            target?.closest("a, button, input, select, textarea, [contenteditable='true']") ||
+            !["ArrowDown", "PageDown", " "].includes(event.key)
+          ) {
+            return;
+          }
+          pendingAdvance = true;
+        };
+
+        const onTouchStart = (event: TouchEvent) => {
+          touchY = event.touches[0]?.clientY ?? 0;
+        };
+
+        const onTouchMove = (event: TouchEvent) => {
+          const nextTouchY = event.touches[0]?.clientY ?? touchY;
+          const delta = touchY - nextTouchY;
+          touchY = nextTouchY;
+          if (delta > 0) pendingAdvance = true;
+        };
+
+        if (lockAtTop) {
+          root.style.overflow = "hidden";
+          body.style.overflow = "hidden";
+          window.addEventListener("wheel", onWheelIntent, { passive: true });
+          window.addEventListener("keydown", onKeyIntent);
+          window.addEventListener("touchstart", onTouchStart, { passive: true });
+          window.addEventListener("touchmove", onTouchMove, { passive: true });
+
+          detachIntentListeners = () => {
+            window.removeEventListener("wheel", onWheelIntent);
+            window.removeEventListener("keydown", onKeyIntent);
+            window.removeEventListener("touchstart", onTouchStart);
+            window.removeEventListener("touchmove", onTouchMove);
+          };
+        }
+
+        entranceTimeline.eventCallback("onComplete", () => heroTimeline.play(0));
+        restoreHeroScroll = unlockHero;
       }
     }, host);
 
@@ -243,6 +300,7 @@ export function SignalField() {
     teardown = () => {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("pointermove", onPointerMove);
+      restoreHeroScroll?.();
       resizeObserver.disconnect();
       context.revert();
       coreGeometry.dispose();

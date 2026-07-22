@@ -90,7 +90,6 @@ function Arrow() {
 
 export function FlovroExperience() {
   const rootRef = useRef<HTMLDivElement>(null);
-  const serviceTrackRef = useRef<HTMLDivElement>(null);
   const [demoMode, setDemoMode] = useState<DemoMode>("inbound");
 
   useEffect(() => {
@@ -101,7 +100,6 @@ export function FlovroExperience() {
 
     void loadGsap().then(({ gsap, ScrollTrigger }) => {
       if (cancelled) return;
-      const media = gsap.matchMedia();
       const context = gsap.context(() => {
       const intro = gsap.timeline({ defaults: { ease: "flovroEase" } });
       intro
@@ -126,38 +124,6 @@ export function FlovroExperience() {
           { y: 0, autoAlpha: 1, stagger: 0.08, duration: 0.75 },
           1.35,
         );
-
-      media.add(
-        {
-          desktop: "(min-width: 900px)",
-          reduceMotion: "(prefers-reduced-motion: reduce)",
-        },
-        (context) => {
-          const { desktop, reduceMotion } = context.conditions as {
-            desktop: boolean;
-            reduceMotion: boolean;
-          };
-
-          if (desktop && !reduceMotion) {
-            const track = serviceTrackRef.current;
-            if (track) {
-              const distance = () => Math.max(0, track.scrollWidth - window.innerWidth + 72);
-              gsap.to(track, {
-                x: () => -distance(),
-                ease: "none",
-                scrollTrigger: {
-                  trigger: ".systems-section",
-                  start: "top top",
-                  end: () => `+=${distance() + window.innerHeight * 0.55}`,
-                  pin: true,
-                  scrub: 0.8,
-                  invalidateOnRefresh: true,
-                },
-              });
-            }
-          }
-        },
-      );
 
       ScrollTrigger.batch(".reveal", {
         start: "top 84%",
@@ -200,7 +166,6 @@ export function FlovroExperience() {
       }, scope);
 
       teardown = () => {
-        media.revert();
         context.revert();
       };
     });
@@ -356,32 +321,34 @@ export function FlovroExperience() {
                 to transform what happens next.
               </p>
             </div>
-            <div className="service-track" ref={serviceTrackRef}>
-              {services.map((service) => (
-                <article
-                  className={`service-card service-${service.color}`}
-                  key={service.number}
-                >
-                  <div className="service-card-top">
-                    <span>{service.number}</span>
-                    <span>{service.label}</span>
-                  </div>
-                  <div className="service-graphic" aria-hidden="true">
-                    <i />
-                    <i />
-                    <i />
-                  </div>
-                  <div className="service-card-copy">
-                    <h3>{service.title}</h3>
-                    <p>{service.text}</p>
-                  </div>
-                  <div className="tag-row">
-                    {service.tags.map((tag) => (
-                      <span key={tag}>{tag}</span>
-                    ))}
-                  </div>
-                </article>
-              ))}
+            <div className="service-rail" aria-label="Flovro systems" tabIndex={0}>
+              <div className="service-track">
+                {services.map((service) => (
+                  <article
+                    className={`service-card service-${service.color}`}
+                    key={service.number}
+                  >
+                    <div className="service-card-top">
+                      <span>{service.number}</span>
+                      <span>{service.label}</span>
+                    </div>
+                    <div className="service-graphic" aria-hidden="true">
+                      <i />
+                      <i />
+                      <i />
+                    </div>
+                    <div className="service-card-copy">
+                      <h3>{service.title}</h3>
+                      <p>{service.text}</p>
+                    </div>
+                    <div className="tag-row">
+                      {service.tags.map((tag) => (
+                        <span key={tag}>{tag}</span>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
           </div>
         </section>
