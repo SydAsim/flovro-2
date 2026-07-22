@@ -183,7 +183,9 @@ export function SignalField() {
         const previousRootOverflow = root.style.overflow;
         const previousBodyOverflow = body.style.overflow;
         let lockActive = lockAtTop;
-        let pendingAdvance = false;
+        let entranceReady = false;
+        let queuedDelta = 0;
+        let scrollProgress = 0;
         let touchY = 0;
         let detachIntentListeners = () => {};
 
@@ -196,7 +198,7 @@ export function SignalField() {
         };
 
         const finishHero = () => {
-          const shouldAdvance = lockActive && pendingAdvance;
+          const shouldAdvance = lockActive;
           unlockHero();
           if (shouldAdvance) {
             window.requestAnimationFrame(() => {
@@ -229,8 +231,31 @@ export function SignalField() {
           .to(orbitB, { scale: 1.12, rotation: -12, duration: 0.78 }, "focus")
           .to({}, { duration: 0.18 });
 
+        const updateHeroProgress = (delta: number) => {
+          if (!lockActive || delta === 0) return;
+          if (!entranceReady) {
+            queuedDelta += delta;
+            return;
+          }
+
+          const interactionDistance = Math.max(window.innerHeight * 1.4, 900);
+          scrollProgress = gsap.utils.clamp(
+            0,
+            1,
+            scrollProgress + delta / interactionDistance,
+          );
+          heroTimeline.progress(scrollProgress);
+          if (scrollProgress >= 1) finishHero();
+        };
+
         const onWheelIntent = (event: WheelEvent) => {
-          if (event.deltaY > 0) pendingAdvance = true;
+          const multiplier =
+            event.deltaMode === 1
+              ? 32
+              : event.deltaMode === 2
+                ? window.innerHeight
+                : 1;
+          updateHeroProgress(event.deltaY * multiplier);
         };
 
         const onKeyIntent = (event: KeyboardEvent) => {
@@ -239,12 +264,16 @@ export function SignalField() {
             event.altKey ||
             event.ctrlKey ||
             event.metaKey ||
-            target?.closest("a, button, input, select, textarea, [contenteditable='true']") ||
-            !["ArrowDown", "PageDown", " "].includes(event.key)
+            target?.closest("a, button, input, select, textarea, [contenteditable='true']")
           ) {
             return;
           }
-          pendingAdvance = true;
+
+          if (["ArrowDown", "PageDown", " "].includes(event.key)) {
+            updateHeroProgress(window.innerHeight * 0.28);
+          } else if (["ArrowUp", "PageUp"].includes(event.key)) {
+            updateHeroProgress(window.innerHeight * -0.28);
+          }
         };
 
         const onTouchStart = (event: TouchEvent) => {
@@ -255,7 +284,7 @@ export function SignalField() {
           const nextTouchY = event.touches[0]?.clientY ?? touchY;
           const delta = touchY - nextTouchY;
           touchY = nextTouchY;
-          if (delta > 0) pendingAdvance = true;
+          updateHeroProgress(delta * 2.2);
         };
 
         if (lockAtTop) {
@@ -274,7 +303,14 @@ export function SignalField() {
           };
         }
 
-        entranceTimeline.eventCallback("onComplete", () => heroTimeline.play(0));
+        entranceTimeline.eventCallback("onComplete", () => {
+          entranceReady = true;
+          if (queuedDelta !== 0) {
+            const delta = queuedDelta;
+            queuedDelta = 0;
+            updateHeroProgress(delta);
+          }
+        });
         restoreHeroScroll = unlockHero;
       }
     }, host);
