@@ -208,9 +208,8 @@ button {
   position: relative;
   min-height: 100svh;
   background:
-    radial-gradient(circle at 72% 43%, rgba(20, 121, 126, 0.22), transparent 28%),
-    radial-gradient(circle at 72% 43%, rgba(38, 99, 83, 0.22), transparent 48%),
-    linear-gradient(155deg, #061713 0%, #04110f 48%, #020a0b 100%);
+    radial-gradient(circle at 70% 45%, rgba(20, 76, 54, 0.42), transparent 35%),
+    linear-gradient(155deg, #071c15 0%, #06130f 48%, #03100c 100%);
   isolation: isolate;
 }
 
@@ -230,23 +229,12 @@ button {
   position: absolute;
   z-index: -1;
   top: 0;
-  right: -4vw;
-  width: 72vw;
+  right: -7vw;
+  width: 68vw;
   height: 100%;
   pointer-events: none;
-  filter: saturate(1.08) contrast(1.03);
+  filter: saturate(1.05);
   will-change: transform, opacity;
-}
-
-.signal-field::after {
-  position: absolute;
-  inset: 11% 2% 8% 10%;
-  z-index: -1;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(59, 226, 231, 0.1), transparent 63%);
-  content: "";
-  filter: blur(34px);
-  opacity: 0.85;
 }
 
 .signal-field canvas {
@@ -1909,11 +1897,11 @@ button {
   }
 
   .signal-field {
-    top: 5%;
-    right: -30%;
-    width: 112vw;
-    height: 76%;
-    opacity: 0.9;
+    top: 8%;
+    right: -28%;
+    width: 110vw;
+    height: 75%;
+    opacity: 0.84;
   }
 
   .hero-copy {

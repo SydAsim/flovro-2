@@ -46,7 +46,7 @@ test("server-renders the Flovro experience", async () => {
   assert.doesNotMatch(html, /codex-preview|Building your site|react-loading-skeleton/);
 });
 
-test("keeps the realistic globe lightweight and scroll input damped", async () => {
+test("keeps the signal field lightweight and scroll input damped", async () => {
   const signalField = await readFile(
     new URL("../app/SignalField.tsx", import.meta.url),
     "utf8",
@@ -57,11 +57,7 @@ test("keeps the realistic globe lightweight and scroll input damped", async () =
   );
 
   assert.match(signalField, /isCompactViewport \? 1\.15 : 1\.35/);
-  assert.match(signalField, /earth-day\.jpg/);
-  assert.match(signalField, /earth-night\.jpg/);
-  assert.match(signalField, /new THREE\.ShaderMaterial/);
-  assert.match(signalField, /new THREE\.TubeGeometry/);
-  assert.match(signalField, /createStarField\(isCompactViewport \? 260 : 520\)/);
+  assert.match(signalField, /isCompactViewport \? 650 : 1200/);
   assert.match(signalField, /new THREE\.InstancedMesh/);
   assert.match(signalField, /THREE\.MathUtils\.damp/);
   assert.match(signalField, /duration: 0\.42/);
