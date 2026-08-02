@@ -46,7 +46,7 @@ test("server-renders the Flovro experience", async () => {
   assert.doesNotMatch(html, /codex-preview|Building your site|react-loading-skeleton/);
 });
 
-test("keeps the signal field lightweight and scroll input damped", async () => {
+test("renders the geographic Three.js globe with damped input", async () => {
   const signalField = await readFile(
     new URL("../app/SignalField.tsx", import.meta.url),
     "utf8",
@@ -57,11 +57,18 @@ test("keeps the signal field lightweight and scroll input damped", async () => {
   );
 
   assert.match(signalField, /isCompactViewport \? 1\.15 : 1\.35/);
-  assert.match(signalField, /isCompactViewport \? 650 : 1200/);
+  assert.match(signalField, /world-110m\.geojson/);
+  assert.match(signalField, /createGeographyPositions/);
+  assert.match(signalField, /createGraticulePositions/);
+  assert.match(signalField, /new THREE\.LineSegments/);
+  assert.match(signalField, /new THREE\.TubeGeometry/);
+  assert.match(signalField, /gl_PointCoord/);
+  assert.match(signalField, /createStarField\(isCompactViewport \? 420 : 800\)/);
   assert.match(signalField, /new THREE\.InstancedMesh/);
   assert.match(signalField, /THREE\.MathUtils\.damp/);
   assert.match(signalField, /duration: 0\.42/);
   assert.match(signalField, /visibilityObserver/);
+  assert.doesNotMatch(signalField, /earth-(?:day|night)\.jpg/);
   assert.equal((experience.match(/href: "https:\/\//g) ?? []).length, 8);
   assert.match(experience, /id="web-development"/);
   assert.match(experience, /id="ai-automations"/);
