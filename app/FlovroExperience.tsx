@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useEffect, useRef, useState } from "react";
 import { loadGsap } from "./gsapClient";
 import { SignalField } from "./SignalField";
@@ -38,6 +39,135 @@ const services = [
     color: "violet",
   },
 ];
+
+const webProjects = [
+  {
+    title: "VaultShield",
+    type: "Cybersecurity product",
+    description:
+      "A trust-led product experience with clear positioning, responsive structure, and focused conversion paths.",
+    href: "https://vaultshielddsad.vercel.app/",
+    theme: "mint",
+  },
+  {
+    title: "Agency Site",
+    type: "Creative agency",
+    description:
+      "An expressive agency presence shaped by bold typography, fast navigation, and purposeful motion.",
+    href: "https://agency-site-chi-bice.vercel.app/",
+    theme: "violet",
+  },
+  {
+    title: "Logoipsum",
+    type: "Brand experience",
+    description:
+      "A high-impact landing experience built around visual rhythm, direct messaging, and memorable brand character.",
+    href: "https://logoipsum-9u1i.vercel.app/",
+    theme: "lime",
+  },
+  {
+    title: "Orlando Dental Care",
+    type: "Healthcare website",
+    description:
+      "A patient-friendly dental website that makes services clear and appointment actions easy to reach.",
+    href: "https://orlando-dental-care-one.vercel.app/",
+    theme: "blue",
+  },
+  {
+    title: "Lumors",
+    type: "Immersive website",
+    description:
+      "An atmospheric digital showcase balancing visual storytelling with a clean, responsive interface.",
+    href: "https://lumors.vercel.app/",
+    theme: "blue",
+  },
+  {
+    title: "Terraelix",
+    type: "Editorial experience",
+    description:
+      "A refined landing page with layered content, tactile motion, and a strong editorial hierarchy.",
+    href: "https://terraelix-two.vercel.app/",
+    theme: "mint",
+  },
+  {
+    title: "Animated Gold",
+    type: "Motion showcase",
+    description:
+      "A motion-first web experiment using depth, pacing, and polished transitions to direct attention.",
+    href: "https://animated-gold.vercel.app/",
+    theme: "lime",
+  },
+  {
+    title: "Orbis Bay",
+    type: "Premium website",
+    description:
+      "A composed, responsive experience with immersive presentation and a premium visual finish.",
+    href: "https://orbis-bay-tau.vercel.app/",
+    theme: "violet",
+  },
+] as const;
+
+const automationProjects = [
+  {
+    number: "01",
+    title: "MediLink AI",
+    type: "Multi-agent healthcare automation",
+    description:
+      "Patient context moves through triage, intelligence, logistics, and doctor review without losing the human decision point.",
+    steps: ["Patient intake", "AI triage", "Doctor decision"],
+    result: "One coordinated care path",
+  },
+  {
+    number: "02",
+    title: "Patient Recovery System",
+    type: "n8n engagement workflow",
+    description:
+      "Missed calls, reminders, and inactive patient lists trigger personalized follow-up and keep appointment status synchronized.",
+    steps: ["Recovery trigger", "Smart follow-up", "CRM update"],
+    result: "More conversations recovered",
+  },
+  {
+    number: "03",
+    title: "VisaGuard AI",
+    type: "AI risk-analysis workflow",
+    description:
+      "Scattered online signals become a structured screening report with traceable evidence and a clear review layer.",
+    steps: ["Data capture", "Signal analysis", "Risk report"],
+    result: "Faster structured review",
+  },
+] as const;
+
+const voiceProjects = [
+  {
+    number: "01",
+    title: "Dental Front Desk Agent",
+    type: "Inbound patient calls",
+    description:
+      "Answers common questions, books and reschedules appointments, follows clinic rules, and escalates urgent cases.",
+    capabilities: ["24/7 answering", "Calendar booking", "Urgent routing"],
+    status: "Inbound",
+  },
+  {
+    number: "02",
+    title: "Home Services Dispatcher",
+    type: "Lead capture and dispatch",
+    description:
+      "Qualifies the job, captures the service address, identifies emergencies, and routes every caller into the right workflow.",
+    capabilities: ["Lead qualification", "Emergency triage", "CRM handoff"],
+    status: "Inbound + outbound",
+  },
+  {
+    number: "03",
+    title: "Follow-up & Recovery Agent",
+    type: "Revenue recovery calls",
+    description:
+      "Calls back missed leads, confirms interest, handles reminders, and transfers high-intent conversations to the team.",
+    capabilities: ["Missed-call recovery", "Reminders", "Live transfer"],
+    status: "Outbound",
+  },
+] as const;
+
+const voiceBars = [36, 62, 45, 84, 56, 100, 72, 42, 88, 52, 78, 60];
 
 const demoModes = {
   inbound: {
@@ -221,7 +351,7 @@ export function FlovroExperience() {
         </a>
         <nav aria-label="Primary navigation">
           <a href="#systems">Systems</a>
-          <a href="#difference">Difference</a>
+          <a href="#work">Work</a>
           <a href="#process">Process</a>
         </nav>
         <a className="nav-cta" href="#contact">
@@ -353,6 +483,141 @@ export function FlovroExperience() {
           </div>
         </section>
 
+        <section className="work-overview section-pad" id="work">
+          <div className="work-overview-heading reveal">
+            <p className="section-kicker">Selected work</p>
+            <h2>Three capabilities.<br />One connected growth system.</h2>
+            <p>
+              Explore the customer-facing experience, the automation behind it,
+              and the voice layer that keeps every opportunity moving.
+            </p>
+          </div>
+          <nav className="work-category-nav" aria-label="Work categories">
+            {[
+              ["01", "Web development", "#web-development"],
+              ["02", "AI automations", "#ai-automations"],
+              ["03", "Voice agents", "#voice-agents"],
+            ].map(([number, label, href]) => (
+              <a href={href} key={href}>
+                <span>{number}</span>
+                <strong>{label}</strong>
+                <Arrow />
+              </a>
+            ))}
+          </nav>
+        </section>
+
+        <section className="work-section web-work section-pad" id="web-development">
+          <div className="work-heading reveal">
+            <p className="section-kicker">01 / Web development projects</p>
+            <h2>Digital experiences built to look distinct and convert clearly.</h2>
+            <p>
+              Responsive product, service, and brand websites with strong
+              hierarchy, purposeful motion, and business-ready performance.
+            </p>
+          </div>
+          <div className="web-work-grid">
+            {webProjects.map((project, index) => (
+              <article className={`web-work-card work-${project.theme} reveal`} key={project.href}>
+                <a href={project.href} target="_blank" rel="noreferrer">
+                  <div className="web-work-preview" aria-hidden="true">
+                    <div className="preview-chrome"><i /><i /><i /><span>flovro / {String(index + 1).padStart(2, "0")}</span></div>
+                    <div className="preview-canvas">
+                      <span>{project.title}</span>
+                      <i />
+                      <i />
+                    </div>
+                  </div>
+                  <div className="web-work-copy">
+                    <span>{String(index + 1).padStart(2, "0")} · {project.type}</span>
+                    <h3>{project.title}</h3>
+                    <p>{project.description}</p>
+                    <strong>Visit live site <Arrow /></strong>
+                  </div>
+                </a>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="work-section automation-work section-pad" id="ai-automations">
+          <div className="work-heading reveal">
+            <p className="section-kicker">02 / AI automations</p>
+            <h2>Intelligent workflows that keep the business moving.</h2>
+            <p>
+              Multi-step systems connecting data, AI decisions, people, and
+              the tools already running daily operations.
+            </p>
+          </div>
+          <div className="automation-work-grid">
+            {automationProjects.map((project) => (
+              <article className="automation-work-card reveal" key={project.title}>
+                <div className="automation-work-top">
+                  <span>{project.number}</span>
+                  <span>{project.type}</span>
+                </div>
+                <div className="automation-nodes" aria-hidden="true">
+                  {project.steps.map((step, index) => (
+                    <span key={step}>
+                      <i>{String(index + 1).padStart(2, "0")}</i>
+                      {step}
+                    </span>
+                  ))}
+                </div>
+                <h3>{project.title}</h3>
+                <p>{project.description}</p>
+                <div className="automation-result">
+                  <span>Outcome</span>
+                  <strong>{project.result}</strong>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="work-section voice-work section-pad" id="voice-agents">
+          <div className="work-heading reveal">
+            <p className="section-kicker">03 / Voice agents</p>
+            <h2>AI callers that sound ready for the job.</h2>
+            <p>
+              Practical inbound and outbound agents with clear guardrails,
+              natural conversations, and dependable human handoffs.
+            </p>
+          </div>
+          <div className="voice-work-grid">
+            {voiceProjects.map((project) => (
+              <article className="voice-work-card reveal" key={project.title}>
+                <div className="voice-work-top">
+                  <span>{project.number}</span>
+                  <span><i /> {project.status}</span>
+                </div>
+                <div className="agent-wave" aria-hidden="true">
+                  {voiceBars.map((height, index) => (
+                    <i
+                      key={`${project.number}-${index}`}
+                      style={{
+                        "--agent-height": `${height}%`,
+                        "--agent-delay": `${index * -68}ms`,
+                      } as CSSProperties}
+                    />
+                  ))}
+                </div>
+                <span className="voice-work-type">{project.type}</span>
+                <h3>{project.title}</h3>
+                <p>{project.description}</p>
+                <div className="voice-capabilities">
+                  {project.capabilities.map((capability) => (
+                    <span key={capability}>{capability}</span>
+                  ))}
+                </div>
+                <a href={`mailto:hello@flovro.com?subject=${encodeURIComponent(`${project.title} inquiry`)}`}>
+                  Build an agent like this <Arrow />
+                </a>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="voice-lab section-pad" id="difference">
           <div className="voice-intro reveal">
             <p className="section-kicker">Voice intelligence</p>
@@ -389,7 +654,7 @@ export function FlovroExperience() {
                 <div className="demo-panel-inner">
                   <div className="wave-field" aria-hidden="true">
                     {Array.from({ length: 44 }, (_, index) => (
-                      <i key={index} style={{ "--wave": index } as React.CSSProperties} />
+                      <i key={index} style={{ "--wave": index } as CSSProperties} />
                     ))}
                   </div>
                   <div className="demo-status">

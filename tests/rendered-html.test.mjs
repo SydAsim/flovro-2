@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function render() {
@@ -35,6 +36,34 @@ test("server-renders the Flovro experience", async () => {
   assert.match(html, /AI voice agents/);
   assert.match(html, /Business automation/);
   assert.match(html, /Digital products/);
+  assert.match(html, /Web development projects/);
+  assert.match(html, /AI automations/);
+  assert.match(html, /Voice agents/);
+  assert.match(html, /VaultShield/);
+  assert.match(html, /MediLink AI/);
+  assert.match(html, /Dental Front Desk Agent/);
   assert.match(html, /Start a conversation/);
   assert.doesNotMatch(html, /codex-preview|Building your site|react-loading-skeleton/);
+});
+
+test("keeps the signal field lightweight and scroll input damped", async () => {
+  const signalField = await readFile(
+    new URL("../app/SignalField.tsx", import.meta.url),
+    "utf8",
+  );
+  const experience = await readFile(
+    new URL("../app/FlovroExperience.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(signalField, /isCompactViewport \? 1\.15 : 1\.35/);
+  assert.match(signalField, /isCompactViewport \? 650 : 1200/);
+  assert.match(signalField, /new THREE\.InstancedMesh/);
+  assert.match(signalField, /THREE\.MathUtils\.damp/);
+  assert.match(signalField, /duration: 0\.42/);
+  assert.match(signalField, /visibilityObserver/);
+  assert.equal((experience.match(/href: "https:\/\//g) ?? []).length, 8);
+  assert.match(experience, /id="web-development"/);
+  assert.match(experience, /id="ai-automations"/);
+  assert.match(experience, /id="voice-agents"/);
 });

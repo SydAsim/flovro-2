@@ -19,6 +19,7 @@ export function SignalField() {
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
+    const isCompactViewport = window.innerWidth < 760;
     const hero = host.closest<HTMLElement>(".hero");
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
@@ -26,20 +27,24 @@ export function SignalField() {
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
-      antialias: true,
+      antialias: !isCompactViewport,
       powerPreference: "high-performance",
     });
     renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+    renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio, isCompactViewport ? 1.15 : 1.35),
+    );
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     host.appendChild(renderer.domElement);
 
     const scrollRig = new THREE.Group();
+    const pointerRig = new THREE.Group();
     const signal = new THREE.Group();
     scene.add(scrollRig);
-    scrollRig.add(signal);
+    scrollRig.add(pointerRig);
+    pointerRig.add(signal);
 
-    const coreGeometry = new THREE.IcosahedronGeometry(1.18, 4);
+    const coreGeometry = new THREE.IcosahedronGeometry(1.18, 3);
     const coreMaterial = new THREE.MeshBasicMaterial({
       color: 0x7affc0,
       wireframe: true,
@@ -49,14 +54,13 @@ export function SignalField() {
     const core = new THREE.Mesh(coreGeometry, coreMaterial);
     signal.add(core);
 
-    const shell = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(1.02, 2),
-      new THREE.MeshBasicMaterial({
-        color: 0x0d2f23,
-        transparent: true,
-        opacity: 0.72,
-      }),
-    );
+    const shellGeometry = new THREE.IcosahedronGeometry(1.02, 2);
+    const shellMaterial = new THREE.MeshBasicMaterial({
+      color: 0x0d2f23,
+      transparent: true,
+      opacity: 0.72,
+    });
+    const shell = new THREE.Mesh(shellGeometry, shellMaterial);
     signal.add(shell);
 
     const haloMaterial = new THREE.MeshBasicMaterial({
@@ -65,21 +69,18 @@ export function SignalField() {
       opacity: 0.25,
     });
 
-    const haloA = new THREE.Mesh(
-      new THREE.TorusGeometry(1.82, 0.012, 8, 180),
-      haloMaterial,
-    );
+    const haloAGeometry = new THREE.TorusGeometry(1.82, 0.012, 8, 120);
+    const haloA = new THREE.Mesh(haloAGeometry, haloMaterial);
     haloA.rotation.set(1.14, 0.25, 0.18);
     signal.add(haloA);
 
-    const haloB = new THREE.Mesh(
-      new THREE.TorusGeometry(2.12, 0.009, 8, 180),
-      haloMaterial.clone(),
-    );
+    const haloBGeometry = new THREE.TorusGeometry(2.12, 0.009, 8, 120);
+    const haloBMaterial = haloMaterial.clone();
+    const haloB = new THREE.Mesh(haloBGeometry, haloBMaterial);
     haloB.rotation.set(0.5, 1.05, -0.45);
     signal.add(haloB);
 
-    const count = window.innerWidth < 760 ? 900 : 1700;
+    const count = isCompactViewport ? 650 : 1200;
     const pointPositions = new Float32Array(count * 3);
     const pointSizes = new Float32Array(count);
     const golden = Math.PI * (3 - Math.sqrt(5));
@@ -118,20 +119,22 @@ export function SignalField() {
     );
     signal.add(particles);
 
-    const orbiters = new THREE.Group();
-    const dotGeometry = new THREE.SphereGeometry(0.035, 8, 8);
+    const dotGeometry = new THREE.SphereGeometry(0.035, 6, 6);
     const dotMaterial = new THREE.MeshBasicMaterial({ color: 0xcaffea });
+    const orbiters = new THREE.InstancedMesh(dotGeometry, dotMaterial, 11);
+    const orbiterTransform = new THREE.Object3D();
     for (let i = 0; i < 11; i += 1) {
-      const dot = new THREE.Mesh(dotGeometry, dotMaterial);
       const angle = (i / 11) * Math.PI * 2;
       const orbit = 1.62 + (i % 3) * 0.3;
-      dot.position.set(
+      orbiterTransform.position.set(
         Math.cos(angle) * orbit,
         Math.sin(angle * 1.7) * 0.78,
         Math.sin(angle) * orbit,
       );
-      orbiters.add(dot);
+      orbiterTransform.updateMatrix();
+      orbiters.setMatrixAt(i, orbiterTransform.matrix);
     }
+    orbiters.instanceMatrix.needsUpdate = true;
     signal.add(orbiters);
 
     const resize = () => {
@@ -186,6 +189,7 @@ export function SignalField() {
         let entranceReady = false;
         let queuedDelta = 0;
         let scrollProgress = 0;
+        const progressState = { value: 0 };
         let touchY = 0;
         let detachIntentListeners = () => {};
 
@@ -244,8 +248,15 @@ export function SignalField() {
             1,
             scrollProgress + delta / interactionDistance,
           );
-          heroTimeline.progress(scrollProgress);
-          if (scrollProgress >= 1) finishHero();
+          gsap.to(progressState, {
+            value: scrollProgress,
+            duration: 0.42,
+            ease: "power3.out",
+            overwrite: "auto",
+            onUpdate: () => {
+              heroTimeline.progress(progressState.value);
+            },
+          });
         };
 
         const onWheelIntent = (event: WheelEvent) => {
@@ -316,19 +327,40 @@ export function SignalField() {
     }, host);
 
     let frame = 0;
+    let sceneVisible = true;
+    const visibilityObserver = new IntersectionObserver(
+      ([entry]) => {
+        sceneVisible = entry?.isIntersecting ?? true;
+      },
+      { rootMargin: "180px" },
+    );
+    visibilityObserver.observe(host);
     const clock = new THREE.Clock();
     const render = () => {
-      const elapsed = clock.getElapsedTime();
-      if (!reduceMotion) {
+      const delta = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
+      if (sceneVisible && !reduceMotion) {
         particles.rotation.y = elapsed * 0.035;
         particles.rotation.x = Math.sin(elapsed * 0.16) * 0.06;
-        haloA.rotation.z += 0.0018;
-        haloB.rotation.z -= 0.0012;
+        haloA.rotation.z += delta * 0.105;
+        haloB.rotation.z -= delta * 0.072;
         orbiters.rotation.y = elapsed * -0.12;
-        signal.rotation.y += (pointerX - signal.rotation.y * 0.04) * 0.003;
-        signal.rotation.x += (-pointerY - signal.rotation.x * 0.03) * 0.003;
+        pointerRig.rotation.y = THREE.MathUtils.damp(
+          pointerRig.rotation.y,
+          pointerX,
+          3.4,
+          delta,
+        );
+        pointerRig.rotation.x = THREE.MathUtils.damp(
+          pointerRig.rotation.x,
+          -pointerY,
+          3.4,
+          delta,
+        );
       }
-      renderer.render(scene, camera);
+      if (sceneVisible) {
+        renderer.render(scene, camera);
+      }
       frame = window.requestAnimationFrame(render);
     };
     render();
@@ -336,14 +368,20 @@ export function SignalField() {
     teardown = () => {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("pointermove", onPointerMove);
+      visibilityObserver.disconnect();
       restoreHeroScroll?.();
       resizeObserver.disconnect();
       context.revert();
       coreGeometry.dispose();
+      shellGeometry.dispose();
+      haloAGeometry.dispose();
+      haloBGeometry.dispose();
       pointsGeometry.dispose();
       dotGeometry.dispose();
       coreMaterial.dispose();
+      shellMaterial.dispose();
       haloMaterial.dispose();
+      haloBMaterial.dispose();
       dotMaterial.dispose();
       renderer.dispose();
       renderer.domElement.remove();
