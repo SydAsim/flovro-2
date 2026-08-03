@@ -179,49 +179,23 @@ function createAirplaneGeometry() {
 }
 
 function createShipGeometry() {
-  const segments: Array<[THREE.Vector3, THREE.Vector3]> = [];
-  const point = (x: number, y: number) => new THREE.Vector3(x, y, 0);
-  const addSegment = (x1: number, y1: number, x2: number, y2: number) => {
-    segments.push([point(x1, y1), point(x2, y2)]);
-  };
-  const addRectangle = (x: number, y: number, width: number, height: number) => {
-    addSegment(x, y, x + width, y);
-    addSegment(x + width, y, x + width, y + height);
-    addSegment(x + width, y + height, x, y + height);
-    addSegment(x, y + height, x, y);
-  };
-
-  addSegment(-0.09, -0.035, 0.09, -0.035);
-  addSegment(0.09, -0.035, 0.058, -0.073);
-  addSegment(0.058, -0.073, -0.06, -0.073);
-  addSegment(-0.06, -0.073, -0.09, -0.035);
-  addSegment(-0.075, -0.015, 0.07, -0.015);
-  addRectangle(-0.06, -0.015, 0.04, 0.042);
-  addRectangle(-0.016, -0.015, 0.04, 0.052);
-  addRectangle(0.028, -0.015, 0.035, 0.035);
-  addRectangle(-0.052, 0.027, 0.028, 0.026);
-  addSegment(-0.038, 0.053, -0.038, 0.086);
-  addSegment(-0.038, 0.086, -0.015, 0.086);
-
-  return new THREE.BufferGeometry().setFromPoints(segments.flat());
-}
-
-function createCubeGeometry() {
-  const source = new THREE.BoxGeometry(0.13, 0.13, 0.13, 1, 1, 1);
-  const geometry = new THREE.EdgesGeometry(source, 1);
-  source.dispose();
+  const hull = new THREE.Shape();
+  hull.moveTo(-0.095, -0.025);
+  hull.lineTo(0.095, -0.025);
+  hull.lineTo(0.058, -0.072);
+  hull.lineTo(-0.06, -0.072);
+  hull.closePath();
+  const geometry = new THREE.ExtrudeGeometry(hull, {
+    depth: 0.06,
+    bevelEnabled: false,
+    steps: 1,
+  });
+  geometry.translate(0, 0, -0.03);
   return geometry;
 }
 
-function createSatelliteAntennaGeometry() {
-  return new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0, 0.035, 0),
-    new THREE.Vector3(0, 0.1, 0),
-    new THREE.Vector3(0, 0.1, 0),
-    new THREE.Vector3(-0.026, 0.122, 0),
-    new THREE.Vector3(0, 0.1, 0),
-    new THREE.Vector3(0.026, 0.122, 0),
-  ]);
+function createCubeGeometry() {
+  return new THREE.BoxGeometry(0.13, 0.13, 0.13, 1, 1, 1);
 }
 
 function createArrowGeometry() {
@@ -352,45 +326,149 @@ function createOrbitRing(
 
 function createOrbitingSatellite(
   bodyGeometry: THREE.BoxGeometry,
-  panelGeometry: THREE.PlaneGeometry,
+  panelGeometry: THREE.BoxGeometry,
+  panelGridGeometry: THREE.PlaneGeometry,
+  boomGeometry: THREE.CylinderGeometry,
+  dishGeometry: THREE.ConeGeometry,
   glowGeometry: THREE.SphereGeometry,
-  wireMaterial: THREE.MeshBasicMaterial,
-  lineMaterial: THREE.LineBasicMaterial,
+  metalMaterial: THREE.MeshStandardMaterial,
+  panelMaterial: THREE.MeshStandardMaterial,
+  gridMaterial: THREE.MeshBasicMaterial,
   glowMaterial: THREE.MeshBasicMaterial,
-  antennaGeometry: THREE.BufferGeometry,
 ) {
   const object = new THREE.Group();
-  const body = new THREE.Mesh(bodyGeometry, wireMaterial);
-  const leftPanel = new THREE.Mesh(panelGeometry, wireMaterial);
-  const rightPanel = new THREE.Mesh(panelGeometry, wireMaterial);
+  const body = new THREE.Mesh(bodyGeometry, metalMaterial);
+  const leftPanel = new THREE.Mesh(panelGeometry, panelMaterial);
+  const rightPanel = new THREE.Mesh(panelGeometry, panelMaterial);
+  const leftGrid = new THREE.Mesh(panelGridGeometry, gridMaterial);
+  const rightGrid = new THREE.Mesh(panelGridGeometry, gridMaterial);
+  const boom = new THREE.Mesh(boomGeometry, metalMaterial);
+  const dish = new THREE.Mesh(dishGeometry, metalMaterial);
   const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-  const antenna = new THREE.LineSegments(antennaGeometry, lineMaterial);
 
-  leftPanel.rotation.x = Math.PI / 2;
-  rightPanel.rotation.x = Math.PI / 2;
   leftPanel.position.z = -0.11;
   rightPanel.position.z = 0.11;
-  body.renderOrder = 7;
-  leftPanel.renderOrder = 7;
-  rightPanel.renderOrder = 7;
-  antenna.renderOrder = 7;
+  leftGrid.rotation.x = -Math.PI / 2;
+  rightGrid.rotation.x = -Math.PI / 2;
+  leftGrid.position.set(0, 0.006, -0.11);
+  rightGrid.position.set(0, 0.006, 0.11);
+  boom.position.y = 0.055;
+  dish.position.y = 0.092;
+  dish.rotation.z = Math.PI;
+  [body, leftPanel, rightPanel, leftGrid, rightGrid, boom, dish].forEach(
+    (part) => {
+      part.renderOrder = 7;
+    },
+  );
   glow.renderOrder = 6;
-  object.add(glow, body, leftPanel, rightPanel, antenna);
+  object.add(
+    glow,
+    body,
+    leftPanel,
+    rightPanel,
+    leftGrid,
+    rightGrid,
+    boom,
+    dish,
+  );
   return object;
 }
 
-function createLineOrbitingGlyph(
-  geometry: THREE.BufferGeometry,
-  lineMaterial: THREE.LineBasicMaterial,
+function createOrbitingAirplane(
+  fuselageGeometry: THREE.CylinderGeometry,
+  noseGeometry: THREE.ConeGeometry,
+  wingGeometry: THREE.BoxGeometry,
+  tailWingGeometry: THREE.BoxGeometry,
+  tailFinGeometry: THREE.BoxGeometry,
   glowGeometry: THREE.SphereGeometry,
+  metalMaterial: THREE.MeshStandardMaterial,
+  accentMaterial: THREE.MeshStandardMaterial,
   glowMaterial: THREE.MeshBasicMaterial,
 ) {
   const object = new THREE.Group();
-  const glyph = new THREE.LineSegments(geometry, lineMaterial);
+  const fuselage = new THREE.Mesh(fuselageGeometry, metalMaterial);
+  const nose = new THREE.Mesh(noseGeometry, accentMaterial);
+  const wings = new THREE.Mesh(wingGeometry, metalMaterial);
+  const tailWings = new THREE.Mesh(tailWingGeometry, metalMaterial);
+  const tailFin = new THREE.Mesh(tailFinGeometry, accentMaterial);
   const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-  glyph.renderOrder = 7;
+  fuselage.rotation.z = -Math.PI / 2;
+  nose.rotation.z = -Math.PI / 2;
+  nose.position.x = 0.084;
+  wings.position.x = 0.005;
+  tailWings.position.x = -0.054;
+  tailFin.position.set(-0.052, 0.018, 0);
+  [fuselage, nose, wings, tailWings, tailFin].forEach((part) => {
+    part.renderOrder = 7;
+  });
   glow.renderOrder = 6;
-  object.add(glow, glyph);
+  object.add(glow, fuselage, nose, wings, tailWings, tailFin);
+  return object;
+}
+
+function createOrbitingShip(
+  hullGeometry: THREE.ExtrudeGeometry,
+  containerGeometry: THREE.BoxGeometry,
+  cabinGeometry: THREE.BoxGeometry,
+  mastGeometry: THREE.CylinderGeometry,
+  glowGeometry: THREE.SphereGeometry,
+  hullMaterial: THREE.MeshStandardMaterial,
+  metalMaterial: THREE.MeshStandardMaterial,
+  accentMaterial: THREE.MeshStandardMaterial,
+  glowMaterial: THREE.MeshBasicMaterial,
+) {
+  const object = new THREE.Group();
+  const hull = new THREE.Mesh(hullGeometry, hullMaterial);
+  const cabin = new THREE.Mesh(cabinGeometry, metalMaterial);
+  const mast = new THREE.Mesh(mastGeometry, accentMaterial);
+  const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+  const containerPositions = [
+    [-0.052, 0.005, -0.026],
+    [-0.052, 0.005, 0.026],
+    [-0.012, 0.005, -0.026],
+    [-0.012, 0.005, 0.026],
+    [0.028, 0.005, -0.026],
+    [0.028, 0.005, 0.026],
+  ] as const;
+  const containers = containerPositions.map(([x, y, z], index) => {
+    const container = new THREE.Mesh(
+      containerGeometry,
+      index % 2 === 0 ? accentMaterial : metalMaterial,
+    );
+    container.position.set(x, y, z);
+    container.renderOrder = 7;
+    return container;
+  });
+  cabin.position.set(-0.067, 0.037, 0);
+  mast.position.set(-0.067, 0.095, 0);
+  hull.renderOrder = 7;
+  cabin.renderOrder = 7;
+  mast.renderOrder = 7;
+  glow.renderOrder = 6;
+  object.add(glow, hull, cabin, mast, ...containers);
+  return object;
+}
+
+function createOrbitingCube(
+  cubeGeometry: THREE.BoxGeometry,
+  edgeGeometry: THREE.EdgesGeometry,
+  coreGeometry: THREE.BoxGeometry,
+  glowGeometry: THREE.SphereGeometry,
+  glassMaterial: THREE.MeshStandardMaterial,
+  edgeMaterial: THREE.LineBasicMaterial,
+  accentMaterial: THREE.MeshStandardMaterial,
+  glowMaterial: THREE.MeshBasicMaterial,
+) {
+  const object = new THREE.Group();
+  const shell = new THREE.Mesh(cubeGeometry, glassMaterial);
+  const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+  const core = new THREE.Mesh(coreGeometry, accentMaterial);
+  const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+  shell.renderOrder = 7;
+  edges.renderOrder = 8;
+  core.renderOrder = 7;
+  glow.renderOrder = 6;
+  object.add(glow, shell, edges, core);
   return object;
 }
 
@@ -595,15 +673,50 @@ export function createGlobeNetwork({
       blending: THREE.NormalBlending,
     }),
   );
-  const satelliteWireMaterial = ownMaterial(
+  const orbitalMetalMaterial = ownMaterial(
+    new THREE.MeshStandardMaterial({
+      color: 0xcfffee,
+      emissive: 0x123f34,
+      emissiveIntensity: 0.28,
+      metalness: 0.72,
+      roughness: 0.3,
+    }),
+  );
+  const orbitalDarkMaterial = ownMaterial(
+    new THREE.MeshStandardMaterial({
+      color: 0x174c40,
+      emissive: 0x082b23,
+      emissiveIntensity: 0.34,
+      metalness: 0.58,
+      roughness: 0.36,
+    }),
+  );
+  const orbitalAccentMaterial = ownMaterial(
+    new THREE.MeshStandardMaterial({
+      color: 0x8bffd0,
+      emissive: 0x1b6b55,
+      emissiveIntensity: 0.42,
+      metalness: 0.45,
+      roughness: 0.28,
+    }),
+  );
+  const orbitalPanelMaterial = ownMaterial(
+    new THREE.MeshStandardMaterial({
+      color: 0x0d6f5d,
+      emissive: 0x063d33,
+      emissiveIntensity: 0.36,
+      metalness: 0.52,
+      roughness: 0.3,
+    }),
+  );
+  const orbitalGridMaterial = ownMaterial(
     new THREE.MeshBasicMaterial({
-      color: 0xc6ffed,
+      color: 0xcffff0,
       transparent: true,
-      opacity: 0.62,
+      opacity: 0.5,
       wireframe: true,
       depthTest: true,
       depthWrite: false,
-      blending: THREE.NormalBlending,
       side: THREE.DoubleSide,
     }),
   );
@@ -627,20 +740,68 @@ export function createGlobeNetwork({
       blending: THREE.AdditiveBlending,
     }),
   );
+  const orbitalGlassMaterial = ownMaterial(
+    new THREE.MeshStandardMaterial({
+      color: 0x68dbba,
+      emissive: 0x0b4b3d,
+      emissiveIntensity: 0.3,
+      metalness: 0.25,
+      roughness: 0.18,
+      transparent: true,
+      opacity: 0.28,
+      depthWrite: false,
+    }),
+  );
   const satelliteBodyGeometry = ownGeometry(
-    new THREE.BoxGeometry(0.11, 0.065, 0.065, 1, 1, 1),
+    new THREE.BoxGeometry(0.085, 0.065, 0.065, 1, 1, 1),
   );
   const satellitePanelGeometry = ownGeometry(
-    new THREE.PlaneGeometry(0.12, 0.07, 2, 1),
+    new THREE.BoxGeometry(0.085, 0.008, 0.1, 1, 1, 1),
+  );
+  const satellitePanelGridGeometry = ownGeometry(
+    new THREE.PlaneGeometry(0.085, 0.1, 3, 3),
+  );
+  const satelliteBoomGeometry = ownGeometry(
+    new THREE.CylinderGeometry(0.004, 0.004, 0.06, 8),
+  );
+  const satelliteDishGeometry = ownGeometry(
+    new THREE.ConeGeometry(0.031, 0.024, 12, 1, true),
   );
   const satelliteGlowGeometry = ownGeometry(
-    new THREE.SphereGeometry(0.105, 10, 8),
-  );
-  const satelliteAntennaGeometry = ownGeometry(
-    createSatelliteAntennaGeometry(),
+    new THREE.SphereGeometry(0.12, 10, 8),
   );
   const orbitShipGeometry = ownGeometry(createShipGeometry());
   const orbitCubeGeometry = ownGeometry(createCubeGeometry());
+  const orbitCubeEdgeGeometry = ownGeometry(
+    new THREE.EdgesGeometry(orbitCubeGeometry, 1),
+  );
+  const orbitCubeCoreGeometry = ownGeometry(
+    new THREE.BoxGeometry(0.044, 0.044, 0.044, 1, 1, 1),
+  );
+  const orbitPlaneFuselageGeometry = ownGeometry(
+    new THREE.CylinderGeometry(0.012, 0.017, 0.13, 12),
+  );
+  const orbitPlaneNoseGeometry = ownGeometry(
+    new THREE.ConeGeometry(0.017, 0.04, 12),
+  );
+  const orbitPlaneWingGeometry = ownGeometry(
+    new THREE.BoxGeometry(0.055, 0.006, 0.14),
+  );
+  const orbitPlaneTailWingGeometry = ownGeometry(
+    new THREE.BoxGeometry(0.03, 0.005, 0.066),
+  );
+  const orbitPlaneTailFinGeometry = ownGeometry(
+    new THREE.BoxGeometry(0.028, 0.035, 0.006),
+  );
+  const orbitShipContainerGeometry = ownGeometry(
+    new THREE.BoxGeometry(0.034, 0.03, 0.044),
+  );
+  const orbitShipCabinGeometry = ownGeometry(
+    new THREE.BoxGeometry(0.036, 0.055, 0.052),
+  );
+  const orbitShipMastGeometry = ownGeometry(
+    new THREE.CylinderGeometry(0.003, 0.003, 0.065, 8),
+  );
 
   const orbitDefinitions = [
     { radius: radius + 0.5, rotation: [0.94, 0.12, -0.28] as const },
@@ -663,10 +824,10 @@ export function createGlobeNetwork({
     phase: number;
     scale: number;
   }> = [
-    { kind: "satellite", orbit: 0, speed: 0.052, phase: 0.08, scale: 0.78 },
-    { kind: "ship", orbit: 1, speed: -0.038, phase: 0.32, scale: 0.82 },
-    { kind: "airplane", orbit: 0, speed: 0.045, phase: 0.58, scale: 1.08 },
-    { kind: "cube", orbit: 1, speed: -0.032, phase: 0.78, scale: 0.8 },
+    { kind: "satellite", orbit: 0, speed: 0.024, phase: 0.08, scale: 0.86 },
+    { kind: "ship", orbit: 1, speed: -0.019, phase: 0.32, scale: 0.9 },
+    { kind: "airplane", orbit: 0, speed: 0.022, phase: 0.58, scale: 1.1 },
+    { kind: "cube", orbit: 1, speed: -0.016, phase: 0.78, scale: 0.82 },
   ];
   const orbitingGlyphs: OrbitingGlyph[] = orbitGlyphDefinitions.map(
     (definition) => {
@@ -675,23 +836,48 @@ export function createGlobeNetwork({
         object = createOrbitingSatellite(
           satelliteBodyGeometry,
           satellitePanelGeometry,
+          satellitePanelGridGeometry,
+          satelliteBoomGeometry,
+          satelliteDishGeometry,
           satelliteGlowGeometry,
-          satelliteWireMaterial,
-          orbitGlyphLineMaterial,
+          orbitalMetalMaterial,
+          orbitalPanelMaterial,
+          orbitalGridMaterial,
           satelliteGlowMaterial,
-          satelliteAntennaGeometry,
+        );
+      } else if (definition.kind === "ship") {
+        object = createOrbitingShip(
+          orbitShipGeometry,
+          orbitShipContainerGeometry,
+          orbitShipCabinGeometry,
+          orbitShipMastGeometry,
+          satelliteGlowGeometry,
+          orbitalDarkMaterial,
+          orbitalMetalMaterial,
+          orbitalAccentMaterial,
+          satelliteGlowMaterial,
+        );
+      } else if (definition.kind === "cube") {
+        object = createOrbitingCube(
+          orbitCubeGeometry,
+          orbitCubeEdgeGeometry,
+          orbitCubeCoreGeometry,
+          satelliteGlowGeometry,
+          orbitalGlassMaterial,
+          orbitGlyphLineMaterial,
+          orbitalAccentMaterial,
+          satelliteGlowMaterial,
         );
       } else {
-        const geometry =
-          definition.kind === "ship"
-            ? orbitShipGeometry
-            : definition.kind === "cube"
-              ? orbitCubeGeometry
-              : airplaneGeometry;
-        object = createLineOrbitingGlyph(
-          geometry,
-          orbitGlyphLineMaterial,
+        object = createOrbitingAirplane(
+          orbitPlaneFuselageGeometry,
+          orbitPlaneNoseGeometry,
+          orbitPlaneWingGeometry,
+          orbitPlaneTailWingGeometry,
+          orbitPlaneTailFinGeometry,
           satelliteGlowGeometry,
+          orbitalMetalMaterial,
+          orbitalAccentMaterial,
           satelliteGlowMaterial,
         );
       }

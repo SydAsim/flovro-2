@@ -102,7 +102,9 @@ test("renders a draggable geographic globe with native page scrolling", async ()
   assert.match(globeNetwork, /function createOrbitingSatellite/);
   assert.match(globeNetwork, /function createShipGeometry/);
   assert.match(globeNetwork, /function createCubeGeometry/);
-  assert.match(globeNetwork, /function createLineOrbitingGlyph/);
+  assert.match(globeNetwork, /function createOrbitingAirplane/);
+  assert.match(globeNetwork, /function createOrbitingShip/);
+  assert.match(globeNetwork, /function createOrbitingCube/);
   assert.match(globeNetwork, /function createOrbitRing/);
   assert.match(globeNetwork, /THREE\.CatmullRomCurve3/);
   assert.match(globeNetwork, /getPointAt/);
@@ -113,6 +115,12 @@ test("renders a draggable geographic globe with native page scrolling", async ()
   assert.match(globeNetwork, /kind: "ship"/);
   assert.match(globeNetwork, /kind: "airplane"/);
   assert.match(globeNetwork, /kind: "cube"/);
+  assert.match(globeNetwork, /new THREE\.MeshStandardMaterial/);
+  assert.match(globeNetwork, /new THREE\.ExtrudeGeometry/);
+  assert.match(globeNetwork, /new THREE\.CylinderGeometry/);
+  assert.match(globeNetwork, /new THREE\.ConeGeometry/);
+  assert.match(globeNetwork, /speed: 0\.024/);
+  assert.match(globeNetwork, /speed: -0\.016/);
   assert.match(globeNetwork, /orbitingGlyphs\.forEach/);
   assert.match(styles, /pointer-events: auto/);
   assert.match(styles, /cursor: grab/);
