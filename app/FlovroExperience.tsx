@@ -287,13 +287,13 @@ export function FlovroExperience() {
             </p>
             <h1>
               <span className="hero-line">
-                <span>Every conversation.</span>
+                <span>Calls answered.</span>
               </span>
               <span className="hero-line hero-line-indent">
-                <span>Every workflow.</span>
+                <span>Work automated.</span>
               </span>
               <span className="hero-line hero-line-accent">
-                <span>In motion.</span>
+                <span>Growth in motion.</span>
               </span>
             </h1>
             <div className="hero-bottom hero-reveal">
@@ -335,6 +335,22 @@ export function FlovroExperience() {
             <i />
           </div>
         </section>
+
+        <nav className="section-index section-pad" aria-label="Page sections">
+          {[
+            ["01", "Work", "#work"],
+            ["02", "Services", "#web-development"],
+            ["03", "Benefits", "#benefits"],
+            ["04", "Industries", "#industries"],
+            ["05", "Process", "#process"],
+            ["06", "Contact", "#contact"],
+          ].map(([number, label, href]) => (
+            <a className="section-index-link" href={href} key={href}>
+              <span>{number}</span>
+              <strong>{label}</strong>
+            </a>
+          ))}
+        </nav>
 
         <section className="work-overview section-pad" id="work">
           <div className="work-overview-heading reveal">
@@ -504,7 +520,7 @@ export function FlovroExperience() {
           </div>
         </section>
 
-        <section className="proof-section">
+        <section className="proof-section" id="benefits">
           <div className="proof-grid-bg" aria-hidden="true" />
           <div className="proof-top section-pad reveal">
             <p className="section-kicker">The operating advantage</p>
@@ -533,7 +549,7 @@ export function FlovroExperience() {
           </div>
         </section>
 
-        <section className="industries section-pad">
+        <section className="industries section-pad" id="industries">
           <div className="industries-heading reveal">
             <p className="section-kicker">Built around real work</p>
             <h2>One intelligence layer.<br />Many business realities.</h2>
