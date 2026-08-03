@@ -63,6 +63,15 @@ test("renders the geographic Three.js globe with damped input", async () => {
   assert.match(signalField, /compact \? 640 : 1024/);
   assert.match(signalField, /compact \? 4 : 3/);
   assert.match(signalField, /networkNodes\.length/);
+  assert.match(signalField, /createSignalPointMaterial/);
+  assert.match(signalField, /const routeTrailSteps = 4/);
+  assert.match(signalField, /new THREE\.OctahedronGeometry/);
+  assert.match(signalField, /orbiterGlows/);
+  assert.match(signalField, /orbiterTrailPositions/);
+  assert.match(signalField, /z: isCompactViewport \? 6\.15 : 5\.75/);
+  assert.match(signalField, /x: isCompactViewport \? 1\.04 : 1\.1/);
+  assert.doesNotMatch(signalField, /z: 4\.8/);
+  assert.doesNotMatch(signalField, /x: 1\.27/);
   assert.match(signalField, /new THREE\.LineSegments/);
   assert.match(signalField, /new THREE\.TubeGeometry/);
   assert.match(signalField, /gl_PointCoord/);

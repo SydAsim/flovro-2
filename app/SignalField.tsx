@@ -136,6 +136,59 @@ function createStarField(count: number) {
   return positions;
 }
 
+function createSignalPointMaterial(
+  color: number,
+  size: number,
+  opacity = 1,
+) {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: { value: new THREE.Color(color) },
+      uOpacity: { value: opacity },
+      uSize: { value: size },
+      uTime: { value: 0 },
+    },
+    vertexShader: `
+      attribute float aPhase;
+      attribute float aStrength;
+      uniform float uSize;
+      uniform float uTime;
+      varying float vPulse;
+      varying float vStrength;
+
+      void main() {
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        vPulse = 0.82 + 0.18 * sin(uTime * 2.8 + aPhase);
+        vStrength = aStrength;
+        gl_PointSize = uSize * (0.55 + 0.45 * aStrength) * vPulse
+          * (100.0 / max(1.0, -mvPosition.z));
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      uniform float uOpacity;
+      varying float vPulse;
+      varying float vStrength;
+
+      void main() {
+        float radial = distance(gl_PointCoord, vec2(0.5));
+        float core = smoothstep(0.19, 0.025, radial);
+        float glow = smoothstep(0.5, 0.12, radial);
+        float ring = smoothstep(0.45, 0.38, radial)
+          - smoothstep(0.31, 0.24, radial);
+        float alpha = (core + glow * 0.24 + ring * 0.72)
+          * uOpacity * vStrength * vPulse;
+        vec3 color = mix(uColor, vec3(0.9, 1.0, 0.97), core * 0.74);
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+}
+
 function createGeographyPositions(worldData: WorldData, compact: boolean) {
   const canvas = document.createElement("canvas");
   canvas.width = compact ? 640 : 1024;
@@ -414,36 +467,49 @@ export function SignalField() {
           globe.add(new THREE.Mesh(geometry, routeMaterial));
         });
 
-        const nodeGeometry = registerGeometry(new THREE.SphereGeometry(0.026, 7, 7));
-        const nodeMaterial = registerMaterial(
-          new THREE.MeshBasicMaterial({ color: 0xc9fff0 }),
-        );
-        const routeNodes = new THREE.InstancedMesh(
-          nodeGeometry,
-          nodeMaterial,
-          routes.length * 2,
-        );
-        const nodeTransform = new THREE.Object3D();
+        const beaconPositions = new Float32Array(routes.length * 2 * 3);
+        const beaconPhases = new Float32Array(routes.length * 2);
+        const beaconStrengths = new Float32Array(routes.length * 2).fill(1);
         routes.forEach((route, index) => {
           [route.from, route.to].forEach(([lng, lat], endpointIndex) => {
-            nodeTransform.position.copy(
-              latLngToVector3(lng, lat, GLOBE_RADIUS + 0.05),
-            );
-            nodeTransform.updateMatrix();
-            routeNodes.setMatrixAt(index * 2 + endpointIndex, nodeTransform.matrix);
+            const beaconIndex = index * 2 + endpointIndex;
+            const point = latLngToVector3(lng, lat, GLOBE_RADIUS + 0.052);
+            beaconPositions[beaconIndex * 3] = point.x;
+            beaconPositions[beaconIndex * 3 + 1] = point.y;
+            beaconPositions[beaconIndex * 3 + 2] = point.z;
+            beaconPhases[beaconIndex] = beaconIndex * 0.73;
           });
         });
-        routeNodes.instanceMatrix.needsUpdate = true;
-        globe.add(routeNodes);
+        const beaconGeometry = registerGeometry(new THREE.BufferGeometry());
+        beaconGeometry.setAttribute(
+          "position",
+          new THREE.BufferAttribute(beaconPositions, 3),
+        );
+        beaconGeometry.setAttribute(
+          "aPhase",
+          new THREE.BufferAttribute(beaconPhases, 1),
+        );
+        beaconGeometry.setAttribute(
+          "aStrength",
+          new THREE.BufferAttribute(beaconStrengths, 1),
+        );
+        const beaconMaterial = registerMaterial(
+          createSignalPointMaterial(
+            0x58ffca,
+            isCompactViewport ? 0.34 : 0.4,
+            0.92,
+          ),
+        );
+        globe.add(new THREE.Points(beaconGeometry, beaconMaterial));
 
         const detailNodeGeometry = registerGeometry(
-          new THREE.SphereGeometry(0.014, 6, 6),
+          new THREE.OctahedronGeometry(0.012, 0),
         );
         const detailNodeMaterial = registerMaterial(
           new THREE.MeshBasicMaterial({
-            color: 0xcffff2,
+            color: 0x49d6a8,
             transparent: true,
-            opacity: 0.84,
+            opacity: 0.68,
           }),
         );
         const detailNodes = new THREE.InstancedMesh(
@@ -451,6 +517,7 @@ export function SignalField() {
           detailNodeMaterial,
           networkNodes.length,
         );
+        const nodeTransform = new THREE.Object3D();
         networkNodes.forEach(([lng, lat], index) => {
           nodeTransform.position.copy(
             latLngToVector3(lng, lat, GLOBE_RADIUS + 0.048),
@@ -461,22 +528,37 @@ export function SignalField() {
         detailNodes.instanceMatrix.needsUpdate = true;
         globe.add(detailNodes);
 
-        const pulsePositions = new Float32Array(routes.length * 3);
+        const routeTrailSteps = 4;
+        const pulseCount = routes.length * routeTrailSteps;
+        const pulsePositions = new Float32Array(pulseCount * 3);
+        const pulsePhases = new Float32Array(pulseCount);
+        const pulseStrengths = new Float32Array(pulseCount);
+        routes.forEach((_, routeIndex) => {
+          for (let trailIndex = 0; trailIndex < routeTrailSteps; trailIndex += 1) {
+            const pulseIndex = routeIndex * routeTrailSteps + trailIndex;
+            pulsePhases[pulseIndex] = routeIndex * 0.84 + trailIndex * 0.22;
+            pulseStrengths[pulseIndex] = 1 - trailIndex * 0.22;
+          }
+        });
         const pulseGeometry = registerGeometry(new THREE.BufferGeometry());
         pulseGeometry.setAttribute(
           "position",
           new THREE.BufferAttribute(pulsePositions, 3),
         );
+        pulseGeometry.setAttribute(
+          "aPhase",
+          new THREE.BufferAttribute(pulsePhases, 1),
+        );
+        pulseGeometry.setAttribute(
+          "aStrength",
+          new THREE.BufferAttribute(pulseStrengths, 1),
+        );
         const pulseMaterial = registerMaterial(
-          new THREE.PointsMaterial({
-            color: 0xe1fff6,
-            size: isCompactViewport ? 0.075 : 0.09,
-            sizeAttenuation: true,
-            transparent: true,
-            opacity: 1,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-          }),
+          createSignalPointMaterial(
+            0x48ffc4,
+            isCompactViewport ? 0.25 : 0.29,
+            0.96,
+          ),
         );
         globe.add(new THREE.Points(pulseGeometry, pulseMaterial));
 
@@ -511,9 +593,11 @@ export function SignalField() {
           orbitShell.add(orbit);
         });
 
-        const orbiterGeometry = registerGeometry(new THREE.SphereGeometry(0.034, 7, 7));
+        const orbiterGeometry = registerGeometry(
+          new THREE.OctahedronGeometry(0.04, 0),
+        );
         const orbiterMaterial = registerMaterial(
-          new THREE.MeshBasicMaterial({ color: 0xc5fff0 }),
+          new THREE.MeshBasicMaterial({ color: 0x55ffca }),
         );
         const orbiterCount = isCompactViewport ? 9 : 14;
         const orbiters = new THREE.InstancedMesh(
@@ -523,8 +607,68 @@ export function SignalField() {
         );
         orbiters.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         orbitShell.add(orbiters);
+
+        const orbiterGlowGeometry = registerGeometry(
+          new THREE.SphereGeometry(0.082, 8, 8),
+        );
+        const orbiterGlowMaterial = registerMaterial(
+          new THREE.MeshBasicMaterial({
+            color: 0x2dffb7,
+            transparent: true,
+            opacity: 0.14,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+          }),
+        );
+        const orbiterGlows = new THREE.InstancedMesh(
+          orbiterGlowGeometry,
+          orbiterGlowMaterial,
+          orbiterCount,
+        );
+        orbiterGlows.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        orbitShell.add(orbiterGlows);
+
+        const orbiterTrailSteps = 3;
+        const orbiterTrailCount = orbiterCount * orbiterTrailSteps;
+        const orbiterTrailPositions = new Float32Array(orbiterTrailCount * 3);
+        const orbiterTrailPhases = new Float32Array(orbiterTrailCount);
+        const orbiterTrailStrengths = new Float32Array(orbiterTrailCount);
+        for (let index = 0; index < orbiterCount; index += 1) {
+          for (let trailIndex = 0; trailIndex < orbiterTrailSteps; trailIndex += 1) {
+            const pointIndex = index * orbiterTrailSteps + trailIndex;
+            orbiterTrailPhases[pointIndex] = index * 0.65 + trailIndex * 0.3;
+            orbiterTrailStrengths[pointIndex] = 0.55 - trailIndex * 0.16;
+          }
+        }
+        const orbiterTrailGeometry = registerGeometry(new THREE.BufferGeometry());
+        orbiterTrailGeometry.setAttribute(
+          "position",
+          new THREE.BufferAttribute(orbiterTrailPositions, 3),
+        );
+        orbiterTrailGeometry.setAttribute(
+          "aPhase",
+          new THREE.BufferAttribute(orbiterTrailPhases, 1),
+        );
+        orbiterTrailGeometry.setAttribute(
+          "aStrength",
+          new THREE.BufferAttribute(orbiterTrailStrengths, 1),
+        );
+        const orbiterTrailMaterial = registerMaterial(
+          createSignalPointMaterial(
+            0x41ffc0,
+            isCompactViewport ? 0.16 : 0.19,
+            0.74,
+          ),
+        );
+        const orbiterTrails = new THREE.Points(
+          orbiterTrailGeometry,
+          orbiterTrailMaterial,
+        );
+        orbitShell.add(orbiterTrails);
         const orbiterTransform = new THREE.Object3D();
+        const orbiterGlowTransform = new THREE.Object3D();
         const orbiterPosition = new THREE.Vector3();
+        const orbiterTrailPosition = new THREE.Vector3();
 
         const starGeometry = registerGeometry(new THREE.BufferGeometry());
         starGeometry.setAttribute(
@@ -636,15 +780,27 @@ export function SignalField() {
             heroTimeline
               .addLabel("focus", 0)
               .to(scrollCue, { autoAlpha: 0, duration: 0.08 }, "focus")
-              .to(camera.position, { z: 4.8, duration: 0.78 }, "focus")
+              .to(
+                camera.position,
+                {
+                  z: isCompactViewport ? 6.15 : 5.75,
+                  duration: 0.78,
+                },
+                "focus",
+              )
               .to(
                 scrollRig.rotation,
-                { y: Math.PI * 0.82, x: -0.2, duration: 0.78 },
+                { y: Math.PI * 0.36, x: -0.1, duration: 0.78 },
                 "focus",
               )
               .to(
                 scrollRig.scale,
-                { x: 1.27, y: 1.27, z: 1.27, duration: 0.78 },
+                {
+                  x: isCompactViewport ? 1.04 : 1.1,
+                  y: isCompactViewport ? 1.04 : 1.1,
+                  z: isCompactViewport ? 1.04 : 1.1,
+                  duration: 0.78,
+                },
                 "focus",
               )
               .to(heroOrbitA, { scale: 1.2, rotation: 18, duration: 0.78 }, "focus")
@@ -753,6 +909,9 @@ export function SignalField() {
         visibilityObserver.observe(host);
         const clock = new THREE.Clock();
         const pulseAttribute = pulseGeometry.getAttribute("position") as THREE.BufferAttribute;
+        const orbiterTrailAttribute = orbiterTrailGeometry.getAttribute(
+          "position",
+        ) as THREE.BufferAttribute;
 
         const render = () => {
           const delta = Math.min(clock.getDelta(), 0.05);
@@ -761,6 +920,9 @@ export function SignalField() {
           if (sceneVisible && !reduceMotion) {
             globe.rotation.y += delta * 0.052;
             if (landMaterial) landMaterial.uniforms.uTime.value = elapsed;
+            beaconMaterial.uniforms.uTime.value = elapsed;
+            pulseMaterial.uniforms.uTime.value = elapsed;
+            orbiterTrailMaterial.uniforms.uTime.value = elapsed;
             if (outlineMaterial) {
               outlineMaterial.opacity = 0.72 + Math.sin(elapsed * 0.8) * 0.06;
             }
@@ -771,11 +933,15 @@ export function SignalField() {
             orbitShell.rotation.z = Math.sin(elapsed * 0.12) * 0.04;
 
             routes.forEach((route, index) => {
-              const progress = (elapsed * route.speed + route.phase) % 1;
-              const point = routeCurves[index].getPointAt(progress);
-              pulsePositions[index * 3] = point.x;
-              pulsePositions[index * 3 + 1] = point.y;
-              pulsePositions[index * 3 + 2] = point.z;
+              for (let trailIndex = 0; trailIndex < routeTrailSteps; trailIndex += 1) {
+                const progress =
+                  (elapsed * route.speed + route.phase - trailIndex * 0.022 + 1) % 1;
+                const point = routeCurves[index].getPointAt(progress);
+                const pulseIndex = index * routeTrailSteps + trailIndex;
+                pulsePositions[pulseIndex * 3] = point.x;
+                pulsePositions[pulseIndex * 3 + 1] = point.y;
+                pulsePositions[pulseIndex * 3 + 2] = point.z;
+              }
             });
             pulseAttribute.needsUpdate = true;
 
@@ -790,8 +956,31 @@ export function SignalField() {
               orbiterTransform.scale.setScalar(pulse);
               orbiterTransform.updateMatrix();
               orbiters.setMatrixAt(index, orbiterTransform.matrix);
+
+              orbiterGlowTransform.position.copy(orbiterPosition);
+              orbiterGlowTransform.scale.setScalar(0.9 + pulse * 0.34);
+              orbiterGlowTransform.updateMatrix();
+              orbiterGlows.setMatrixAt(index, orbiterGlowTransform.matrix);
+
+              for (let trailIndex = 0; trailIndex < orbiterTrailSteps; trailIndex += 1) {
+                const trailAngle =
+                  angle - Math.sign(spec.speed) * (trailIndex + 1) * 0.045;
+                orbiterTrailPosition
+                  .set(
+                    Math.cos(trailAngle) * spec.radius,
+                    Math.sin(trailAngle) * spec.radius,
+                    0,
+                  )
+                  .applyEuler(spec.rotation);
+                const trailPointIndex = index * orbiterTrailSteps + trailIndex;
+                orbiterTrailPositions[trailPointIndex * 3] = orbiterTrailPosition.x;
+                orbiterTrailPositions[trailPointIndex * 3 + 1] = orbiterTrailPosition.y;
+                orbiterTrailPositions[trailPointIndex * 3 + 2] = orbiterTrailPosition.z;
+              }
             }
             orbiters.instanceMatrix.needsUpdate = true;
+            orbiterGlows.instanceMatrix.needsUpdate = true;
+            orbiterTrailAttribute.needsUpdate = true;
 
             pointerRig.rotation.y = THREE.MathUtils.damp(
               pointerRig.rotation.y,
