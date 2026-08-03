@@ -181,7 +181,7 @@ button {
   position: absolute;
   z-index: 0;
   top: 0;
-  right: -3vw;
+  right: -6vw;
   width: 73vw;
   height: 100%;
   pointer-events: auto;
@@ -390,6 +390,85 @@ button {
 
 @keyframes scrollLine {
   55%, 100% { transform: translateX(100%); }
+}
+
+.section-index {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  overflow-x: auto;
+  padding-top: 26px;
+  padding-bottom: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  scrollbar-width: none;
+}
+
+.section-index::-webkit-scrollbar {
+  display: none;
+}
+
+.section-index-link {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0 12px 17px 0;
+  border-bottom: 1px solid rgba(6, 19, 15, 0.42);
+}
+
+.section-index-link::after {
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  content: "";
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.section-index-link:first-child::after,
+.section-index-link:hover::after,
+.section-index-link:focus-visible::after {
+  border-color: #68b900;
+  background: #68b900;
+  transform: scale(1.2);
+}
+
+.section-index-link > span {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  opacity: 0.58;
+}
+
+.section-index-link > strong {
+  overflow: hidden;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1rem, 1.35vw, 1.3rem);
+  font-style: italic;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.section-index-link:hover > strong,
+.section-index-link:focus-visible > strong {
+  color: #3e7800;
+  transform: translateX(3px);
+}
+
+#benefits,
+#industries,
+#process,
+#contact {
+  scroll-margin-top: 88px;
 }
 
 .proof-top h2,
@@ -1409,6 +1488,10 @@ button {
 }
 
 @media (max-width: 680px) {
+  .section-index {
+    grid-template-columns: repeat(6, 140px);
+  }
+
   .nav-shell {
     top: 10px;
     width: calc(100% - 20px);
