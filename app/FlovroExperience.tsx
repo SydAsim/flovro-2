@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loadGsap } from "./gsapClient";
 import { SignalField } from "./SignalField";
 
@@ -134,6 +134,25 @@ const voiceProjects = [
 
 const voiceBars = [36, 62, 45, 84, 56, 100, 72, 42, 88, 52, 78, 60];
 
+const sectionLinks = [
+  { number: "01", label: "Work", href: "#work", id: "work" },
+  {
+    number: "02",
+    label: "Services",
+    href: "#web-development",
+    id: "web-development",
+  },
+  { number: "03", label: "Benefits", href: "#benefits", id: "benefits" },
+  {
+    number: "04",
+    label: "Industries",
+    href: "#industries",
+    id: "industries",
+  },
+  { number: "05", label: "Process", href: "#process", id: "process" },
+  { number: "06", label: "Contact", href: "#contact", id: "contact" },
+] as const;
+
 function BrandMark() {
   return (
     <span className="brand-mark" aria-hidden="true">
@@ -196,9 +215,11 @@ function RailControls({
 
 export function FlovroExperience() {
   const rootRef = useRef<HTMLDivElement>(null);
+  const sectionIndexRef = useRef<HTMLElement>(null);
   const webRailRef = useRef<HTMLDivElement>(null);
   const automationRailRef = useRef<HTMLDivElement>(null);
   const voiceRailRef = useRef<HTMLDivElement>(null);
+  const [activeSection, setActiveSection] = useState(0);
 
   useEffect(() => {
     const scope = rootRef.current;
@@ -259,6 +280,55 @@ export function FlovroExperience() {
       teardown?.();
     };
   }, []);
+
+  useEffect(() => {
+    let frame = 0;
+
+    const updateActiveSection = () => {
+      frame = 0;
+      const readingLine =
+        window.scrollY + Math.min(window.innerHeight * 0.38, 360);
+      let nextSection = 0;
+
+      sectionLinks.forEach(({ id }, index) => {
+        const section = document.getElementById(id);
+        if (section && section.offsetTop <= readingLine) nextSection = index;
+      });
+
+      setActiveSection((current) =>
+        current === nextSection ? current : nextSection,
+      );
+    };
+
+    const requestUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateActiveSection);
+    };
+
+    updateActiveSection();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate);
+
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", requestUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    const index = sectionIndexRef.current;
+    const activeLink = index?.querySelector<HTMLElement>(
+      ".section-index-link.is-active",
+    );
+    if (!index || !activeLink || index.scrollWidth <= index.clientWidth) return;
+
+    index.scrollTo({
+      left:
+        activeLink.offsetLeft -
+        (index.clientWidth - activeLink.offsetWidth) / 2,
+      behavior: "smooth",
+    });
+  }, [activeSection]);
 
   return (
     <div className="site-shell" ref={rootRef}>
@@ -336,16 +406,26 @@ export function FlovroExperience() {
           </div>
         </section>
 
-        <nav className="section-index section-pad" aria-label="Page sections">
-          {[
-            ["01", "Work", "#work"],
-            ["02", "Services", "#web-development"],
-            ["03", "Benefits", "#benefits"],
-            ["04", "Industries", "#industries"],
-            ["05", "Process", "#process"],
-            ["06", "Contact", "#contact"],
-          ].map(([number, label, href]) => (
-            <a className="section-index-link" href={href} key={href}>
+        <nav
+          className="section-index section-pad"
+          aria-label="Page sections"
+          ref={sectionIndexRef}
+          style={
+            {
+              "--section-progress": `${(activeSection / (sectionLinks.length - 1)) * 100}%`,
+            } as CSSProperties
+          }
+        >
+          <span className="section-index-line" aria-hidden="true">
+            <i />
+          </span>
+          {sectionLinks.map(({ number, label, href }, index) => (
+            <a
+              className={`section-index-link${index < activeSection ? " is-complete" : ""}${index === activeSection ? " is-active" : ""}`}
+              href={href}
+              key={href}
+              aria-current={index === activeSection ? "location" : undefined}
+            >
               <span>{number}</span>
               <strong>{label}</strong>
             </a>
