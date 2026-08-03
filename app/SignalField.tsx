@@ -33,6 +33,33 @@ const routes: Route[] = [
   { from: [28.98, 41.01], to: [18.07, 59.33], height: 0.28, phase: 0.4, speed: 0.15 },
 ];
 
+const networkNodes: Coordinate[] = [
+  [-0.13, 51.51],
+  [2.35, 48.86],
+  [-3.7, 40.42],
+  [13.4, 52.52],
+  [18.07, 59.33],
+  [28.98, 41.01],
+  [31.24, 30.04],
+  [3.38, 6.52],
+  [36.82, -1.29],
+  [28.04, -26.2],
+  [18.42, -33.92],
+  [55.27, 25.2],
+  [67.01, 24.86],
+  [72.88, 19.08],
+  [77.21, 28.61],
+  [103.82, 1.35],
+  [106.85, -6.21],
+  [139.69, 35.68],
+  [151.21, -33.87],
+  [-74, 40.71],
+  [-79.38, 43.65],
+  [-99.13, 19.43],
+  [-122.42, 37.77],
+  [-46.63, -23.55],
+];
+
 function getPolygons(geometry: WorldGeometry) {
   return geometry.type === "Polygon"
     ? [geometry.coordinates]
@@ -68,20 +95,20 @@ function createGraticulePositions(radius: number) {
     positions.push(a.x, a.y, a.z, b.x, b.y, b.z);
   };
 
-  for (let lat = -75; lat <= 75; lat += 15) {
-    for (let lng = -180; lng < 180; lng += 4) {
+  for (let lat = -80; lat <= 80; lat += 10) {
+    for (let lng = -180; lng < 180; lng += 2) {
       pushSegment(
         latLngToVector3(lng, lat, radius),
-        latLngToVector3(lng + 4, lat, radius),
+        latLngToVector3(lng + 2, lat, radius),
       );
     }
   }
 
-  for (let lng = -180; lng < 180; lng += 15) {
-    for (let lat = -88; lat < 88; lat += 4) {
+  for (let lng = -180; lng < 180; lng += 10) {
+    for (let lat = -88; lat < 88; lat += 2) {
       pushSegment(
         latLngToVector3(lng, lat, radius),
-        latLngToVector3(lng, Math.min(lat + 4, 88), radius),
+        latLngToVector3(lng, Math.min(lat + 2, 88), radius),
       );
     }
   }
@@ -111,8 +138,8 @@ function createStarField(count: number) {
 
 function createGeographyPositions(worldData: WorldData, compact: boolean) {
   const canvas = document.createElement("canvas");
-  canvas.width = compact ? 480 : 720;
-  canvas.height = compact ? 240 : 360;
+  canvas.width = compact ? 640 : 1024;
+  canvas.height = compact ? 320 : 512;
   const context = canvas.getContext("2d", { willReadFrequently: true });
   const outlinePositions: number[] = [];
 
@@ -141,16 +168,37 @@ function createGeographyPositions(worldData: WorldData, compact: boolean) {
 
           const next = ring[index + 1];
           if (!next || Math.abs(next[0] - lng) > 180) return;
-          const start = latLngToVector3(lng, lat, GLOBE_RADIUS + 0.035);
-          const end = latLngToVector3(next[0], next[1], GLOBE_RADIUS + 0.035);
-          outlinePositions.push(
-            start.x,
-            start.y,
-            start.z,
-            end.x,
-            end.y,
-            end.z,
+          const longitudeDelta = next[0] - lng;
+          const latitudeDelta = next[1] - lat;
+          const subdivisions = Math.max(
+            1,
+            Math.ceil(
+              Math.max(Math.abs(longitudeDelta), Math.abs(latitudeDelta)) / 0.7,
+            ),
           );
+
+          for (let segment = 0; segment < subdivisions; segment += 1) {
+            const startProgress = segment / subdivisions;
+            const endProgress = (segment + 1) / subdivisions;
+            const start = latLngToVector3(
+              lng + longitudeDelta * startProgress,
+              lat + latitudeDelta * startProgress,
+              GLOBE_RADIUS + 0.035,
+            );
+            const end = latLngToVector3(
+              lng + longitudeDelta * endProgress,
+              lat + latitudeDelta * endProgress,
+              GLOBE_RADIUS + 0.035,
+            );
+            outlinePositions.push(
+              start.x,
+              start.y,
+              start.z,
+              end.x,
+              end.y,
+              end.z,
+            );
+          }
         });
         path.closePath();
       });
@@ -161,7 +209,7 @@ function createGeographyPositions(worldData: WorldData, compact: boolean) {
 
   const imageData = context.getImageData(0, 0, canvas.width, canvas.height).data;
   const dotPositions: number[] = [];
-  const step = compact ? 5 : 4;
+  const step = compact ? 4 : 3;
 
   for (let y = step / 2; y < canvas.height; y += step) {
     const rowOffset = Math.floor(y / step) % 2 === 0 ? 0 : step * 0.5;
@@ -247,8 +295,8 @@ export function SignalField() {
         const sphereGeometry = registerGeometry(
           new THREE.SphereGeometry(
             GLOBE_RADIUS,
-            isCompactViewport ? 52 : 72,
-            isCompactViewport ? 30 : 44,
+            isCompactViewport ? 64 : 96,
+            isCompactViewport ? 40 : 64,
           ),
         );
         const sphereMaterial = registerMaterial(
@@ -275,7 +323,7 @@ export function SignalField() {
           new THREE.LineBasicMaterial({
             color: 0x43d9b2,
             transparent: true,
-            opacity: 0.16,
+            opacity: 0.12,
             blending: THREE.AdditiveBlending,
             depthWrite: false,
           }),
@@ -297,7 +345,7 @@ export function SignalField() {
               uniforms: {
                 uColor: { value: new THREE.Color(0x4fffc8) },
                 uTime: { value: 0 },
-                uSize: { value: isCompactViewport ? 0.13 : 0.16 },
+                uSize: { value: isCompactViewport ? 0.105 : 0.125 },
               },
               vertexShader: `
                 uniform float uTime;
@@ -333,51 +381,15 @@ export function SignalField() {
           );
           outlineMaterial = registerMaterial(
             new THREE.LineBasicMaterial({
-              color: 0x72ffda,
+              color: 0xb8ffeb,
               transparent: true,
-              opacity: 0.72,
+              opacity: 0.78,
               blending: THREE.AdditiveBlending,
               depthWrite: false,
             }),
           );
           globe.add(new THREE.LineSegments(outlineGeometry, outlineMaterial));
         }
-
-        const atmosphereGeometry = registerGeometry(
-          new THREE.SphereGeometry(
-            GLOBE_RADIUS + 0.13,
-            isCompactViewport ? 48 : 68,
-            isCompactViewport ? 28 : 40,
-          ),
-        );
-        const atmosphereMaterial = registerMaterial(
-          new THREE.ShaderMaterial({
-            vertexShader: `
-              varying vec3 vNormal;
-              varying vec3 vViewDirection;
-              void main() {
-                vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-                vNormal = normalize(normalMatrix * normal);
-                vViewDirection = normalize(-modelViewPosition.xyz);
-                gl_Position = projectionMatrix * modelViewPosition;
-              }
-            `,
-            fragmentShader: `
-              varying vec3 vNormal;
-              varying vec3 vViewDirection;
-              void main() {
-                float rim = pow(max(0.0, 0.76 - dot(vNormal, vViewDirection)), 2.1);
-                vec3 mint = vec3(0.23, 1.0, 0.78);
-                gl_FragColor = vec4(mint, rim * 0.94);
-              }
-            `,
-            transparent: true,
-            blending: THREE.AdditiveBlending,
-            side: THREE.BackSide,
-            depthWrite: false,
-          }),
-        );
-        globe.add(new THREE.Mesh(atmosphereGeometry, atmosphereMaterial));
 
         const routeCurves = routes.map(createRouteCurve);
         const routeMaterial = registerMaterial(
@@ -423,6 +435,31 @@ export function SignalField() {
         });
         routeNodes.instanceMatrix.needsUpdate = true;
         globe.add(routeNodes);
+
+        const detailNodeGeometry = registerGeometry(
+          new THREE.SphereGeometry(0.014, 6, 6),
+        );
+        const detailNodeMaterial = registerMaterial(
+          new THREE.MeshBasicMaterial({
+            color: 0xcffff2,
+            transparent: true,
+            opacity: 0.84,
+          }),
+        );
+        const detailNodes = new THREE.InstancedMesh(
+          detailNodeGeometry,
+          detailNodeMaterial,
+          networkNodes.length,
+        );
+        networkNodes.forEach(([lng, lat], index) => {
+          nodeTransform.position.copy(
+            latLngToVector3(lng, lat, GLOBE_RADIUS + 0.048),
+          );
+          nodeTransform.updateMatrix();
+          detailNodes.setMatrixAt(index, nodeTransform.matrix);
+        });
+        detailNodes.instanceMatrix.needsUpdate = true;
+        globe.add(detailNodes);
 
         const pulsePositions = new Float32Array(routes.length * 3);
         const pulseGeometry = registerGeometry(new THREE.BufferGeometry());
@@ -725,9 +762,9 @@ export function SignalField() {
             globe.rotation.y += delta * 0.052;
             if (landMaterial) landMaterial.uniforms.uTime.value = elapsed;
             if (outlineMaterial) {
-              outlineMaterial.opacity = 0.64 + Math.sin(elapsed * 0.8) * 0.08;
+              outlineMaterial.opacity = 0.72 + Math.sin(elapsed * 0.8) * 0.06;
             }
-            graticuleMaterial.opacity = 0.14 + Math.sin(elapsed * 0.45) * 0.025;
+            graticuleMaterial.opacity = 0.1 + Math.sin(elapsed * 0.45) * 0.018;
             stars.rotation.y = elapsed * 0.006;
             stars.rotation.x = Math.sin(elapsed * 0.1) * 0.018;
             orbitShell.rotation.y = elapsed * -0.025;

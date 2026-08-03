@@ -238,16 +238,6 @@ button {
   will-change: transform, opacity;
 }
 
-.signal-field::after {
-  position: absolute;
-  inset: 9% 0 7% 9%;
-  z-index: -1;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(53, 255, 197, 0.1), transparent 64%);
-  content: "";
-  filter: blur(38px);
-}
-
 .signal-field canvas {
   display: block;
   width: 100%;

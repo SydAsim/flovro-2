@@ -60,6 +60,9 @@ test("renders the geographic Three.js globe with damped input", async () => {
   assert.match(signalField, /world-110m\.geojson/);
   assert.match(signalField, /createGeographyPositions/);
   assert.match(signalField, /createGraticulePositions/);
+  assert.match(signalField, /compact \? 640 : 1024/);
+  assert.match(signalField, /compact \? 4 : 3/);
+  assert.match(signalField, /networkNodes\.length/);
   assert.match(signalField, /new THREE\.LineSegments/);
   assert.match(signalField, /new THREE\.TubeGeometry/);
   assert.match(signalField, /gl_PointCoord/);
@@ -69,6 +72,7 @@ test("renders the geographic Three.js globe with damped input", async () => {
   assert.match(signalField, /duration: 0\.42/);
   assert.match(signalField, /visibilityObserver/);
   assert.doesNotMatch(signalField, /earth-(?:day|night)\.jpg/);
+  assert.doesNotMatch(signalField, /atmosphereGeometry/);
   assert.equal((experience.match(/href: "https:\/\//g) ?? []).length, 8);
   assert.match(experience, /id="web-development"/);
   assert.match(experience, /id="ai-automations"/);
