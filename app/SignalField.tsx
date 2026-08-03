@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { createGlobeNetwork } from "./GlobeNetwork";
 import { loadGsap } from "./gsapClient";
 
 const GLOBE_RADIUS = 1.58;
@@ -337,13 +336,6 @@ export function SignalField() {
         fillLight.position.set(3.5, -2.2, 3.8);
         scene.add(ambientLight, keyLight, fillLight);
 
-        const globeNetwork = createGlobeNetwork({
-          globe,
-          signal,
-          radius: GLOBE_RADIUS,
-          compact: isCompactViewport,
-        });
-
         const resize = () => {
           const { width, height } = host.getBoundingClientRect();
           renderer.setSize(width, height, false);
@@ -477,7 +469,6 @@ export function SignalField() {
             }
             graticuleMaterial.opacity =
               0.16 + Math.sin(animationTime * 0.45) * 0.015;
-            globeNetwork.update(animationTime);
           }
 
           if (canRender) renderer.render(scene, camera);
@@ -497,7 +488,6 @@ export function SignalField() {
           canvas.removeEventListener("pointercancel", finishPointerDrag);
           canvas.removeEventListener("lostpointercapture", finishPointerDrag);
           canvas.classList.remove("is-dragging");
-          globeNetwork.dispose();
           geometries.forEach((geometry) => geometry.dispose());
           materials.forEach((material) => material.dispose());
           renderer.dispose();
