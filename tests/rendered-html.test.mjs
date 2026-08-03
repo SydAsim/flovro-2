@@ -68,9 +68,12 @@ test("renders a draggable geographic globe with native page scrolling", async ()
   assert.match(signalField, /createGeographyPositions/);
   assert.match(signalField, /createGraticulePositions/);
   assert.match(signalField, /compact \? 640 : 1024/);
-  assert.match(signalField, /compact \? 4 : 3/);
+  assert.match(signalField, /compact \? 3 : 2/);
   assert.match(signalField, /new THREE\.LineSegments/);
   assert.match(signalField, /gl_PointCoord/);
+  assert.match(signalField, /vFacing = smoothstep/);
+  assert.match(signalField, /THREE\.NormalBlending/);
+  assert.match(signalField, /fillLight/);
   assert.match(signalField, /canvas\.setPointerCapture/);
   assert.match(signalField, /canvas\.classList\.add\("is-dragging"\)/);
   assert.match(signalField, /globe\.rotation\.y \+= deltaX \* 0\.006/);

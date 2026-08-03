@@ -96,7 +96,7 @@ function createGeographyPositions(worldData: WorldData, compact: boolean) {
           const subdivisions = Math.max(
             1,
             Math.ceil(
-              Math.max(Math.abs(longitudeDelta), Math.abs(latitudeDelta)) / 0.7,
+              Math.max(Math.abs(longitudeDelta), Math.abs(latitudeDelta)) / 0.5,
             ),
           );
 
@@ -106,12 +106,12 @@ function createGeographyPositions(worldData: WorldData, compact: boolean) {
             const start = latLngToVector3(
               lng + longitudeDelta * startProgress,
               lat + latitudeDelta * startProgress,
-              GLOBE_RADIUS + 0.035,
+              GLOBE_RADIUS + 0.042,
             );
             const end = latLngToVector3(
               lng + longitudeDelta * endProgress,
               lat + latitudeDelta * endProgress,
-              GLOBE_RADIUS + 0.035,
+              GLOBE_RADIUS + 0.042,
             );
             outlinePositions.push(
               start.x,
@@ -132,7 +132,7 @@ function createGeographyPositions(worldData: WorldData, compact: boolean) {
 
   const imageData = context.getImageData(0, 0, canvas.width, canvas.height).data;
   const dotPositions: number[] = [];
-  const step = compact ? 4 : 3;
+  const step = compact ? 3 : 2;
 
   for (let y = step / 2; y < canvas.height; y += step) {
     const rowOffset = Math.floor(y / step) % 2 === 0 ? 0 : step * 0.5;
@@ -141,7 +141,7 @@ function createGeographyPositions(worldData: WorldData, compact: boolean) {
       if (imageData[pixel + 3] < 100) continue;
       const lng = (x / canvas.width) * 360 - 180;
       const lat = 90 - (y / canvas.height) * 180;
-      const point = latLngToVector3(lng, lat, GLOBE_RADIUS + 0.022);
+      const point = latLngToVector3(lng, lat, GLOBE_RADIUS + 0.036);
       dotPositions.push(point.x, point.y, point.z);
     }
   }
@@ -219,15 +219,16 @@ export function SignalField() {
         );
         const sphereMaterial = registerMaterial(
           new THREE.MeshPhongMaterial({
-            color: 0x041915,
-            emissive: 0x031c17,
-            emissiveIntensity: 0.82,
-            shininess: 130,
-            transparent: true,
-            opacity: 0.92,
+            color: 0x06251d,
+            emissive: 0x052b21,
+            emissiveIntensity: 0.94,
+            shininess: 105,
+            transparent: false,
           }),
         );
-        globe.add(new THREE.Mesh(sphereGeometry, sphereMaterial));
+        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphere.renderOrder = 0;
+        globe.add(sphere);
 
         const graticuleGeometry = registerGeometry(new THREE.BufferGeometry());
         graticuleGeometry.setAttribute(
@@ -239,14 +240,20 @@ export function SignalField() {
         );
         const graticuleMaterial = registerMaterial(
           new THREE.LineBasicMaterial({
-            color: 0x43d9b2,
+            color: 0x39c7a4,
             transparent: true,
-            opacity: 0.12,
-            blending: THREE.AdditiveBlending,
+            opacity: 0.17,
+            blending: THREE.NormalBlending,
+            depthTest: true,
             depthWrite: false,
           }),
         );
-        globe.add(new THREE.LineSegments(graticuleGeometry, graticuleMaterial));
+        const graticule = new THREE.LineSegments(
+          graticuleGeometry,
+          graticuleMaterial,
+        );
+        graticule.renderOrder = 1;
+        globe.add(graticule);
 
         let landMaterial: THREE.ShaderMaterial | undefined;
         let outlineMaterial: THREE.LineBasicMaterial | undefined;
@@ -261,17 +268,20 @@ export function SignalField() {
           landMaterial = registerMaterial(
             new THREE.ShaderMaterial({
               uniforms: {
-                uColor: { value: new THREE.Color(0x4fffc8) },
+                uColor: { value: new THREE.Color(0x6affe0) },
                 uTime: { value: 0 },
-                uSize: { value: isCompactViewport ? 0.105 : 0.125 },
+                uSize: { value: isCompactViewport ? 0.095 : 0.115 },
               },
               vertexShader: `
                 uniform float uTime;
                 uniform float uSize;
                 varying float vPulse;
+                varying float vFacing;
                 void main() {
                   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-                  vPulse = 0.82 + 0.18 * sin(uTime * 1.4 + position.y * 13.0 + position.x * 7.0);
+                  vec3 viewNormal = normalize(normalMatrix * normalize(position));
+                  vFacing = smoothstep(0.02, 0.32, viewNormal.z);
+                  vPulse = 0.88 + 0.12 * sin(uTime * 1.25 + position.y * 13.0 + position.x * 7.0);
                   gl_PointSize = uSize * vPulse * (100.0 / max(1.0, -mvPosition.z));
                   gl_Position = projectionMatrix * mvPosition;
                 }
@@ -279,18 +289,22 @@ export function SignalField() {
               fragmentShader: `
                 uniform vec3 uColor;
                 varying float vPulse;
+                varying float vFacing;
                 void main() {
                   float distanceToCenter = distance(gl_PointCoord, vec2(0.5));
-                  float alpha = smoothstep(0.5, 0.16, distanceToCenter) * vPulse;
+                  float alpha = smoothstep(0.5, 0.12, distanceToCenter) * vPulse * vFacing;
                   gl_FragColor = vec4(uColor, alpha);
                 }
               `,
               transparent: true,
-              blending: THREE.AdditiveBlending,
+              blending: THREE.NormalBlending,
+              depthTest: true,
               depthWrite: false,
             }),
           );
-          globe.add(new THREE.Points(landGeometry, landMaterial));
+          const land = new THREE.Points(landGeometry, landMaterial);
+          land.renderOrder = 2;
+          globe.add(land);
 
           const outlineGeometry = registerGeometry(new THREE.BufferGeometry());
           outlineGeometry.setAttribute(
@@ -299,20 +313,28 @@ export function SignalField() {
           );
           outlineMaterial = registerMaterial(
             new THREE.LineBasicMaterial({
-              color: 0xb8ffeb,
+              color: 0xa9ffe8,
               transparent: true,
-              opacity: 0.78,
-              blending: THREE.AdditiveBlending,
+              opacity: 0.62,
+              blending: THREE.NormalBlending,
+              depthTest: true,
               depthWrite: false,
             }),
           );
-          globe.add(new THREE.LineSegments(outlineGeometry, outlineMaterial));
+          const outlines = new THREE.LineSegments(
+            outlineGeometry,
+            outlineMaterial,
+          );
+          outlines.renderOrder = 3;
+          globe.add(outlines);
         }
 
-        const ambientLight = new THREE.HemisphereLight(0x7dffe0, 0x010806, 0.45);
-        const keyLight = new THREE.PointLight(0x74ffd8, 15, 10, 2);
+        const ambientLight = new THREE.HemisphereLight(0x8dffe4, 0x02100c, 0.72);
+        const keyLight = new THREE.PointLight(0x74ffd8, 12, 10, 2);
         keyLight.position.set(-2.5, 3.3, 4.8);
-        scene.add(ambientLight, keyLight);
+        const fillLight = new THREE.PointLight(0x26b994, 5, 9, 2);
+        fillLight.position.set(3.5, -2.2, 3.8);
+        scene.add(ambientLight, keyLight, fillLight);
 
         const resize = () => {
           const { width, height } = host.getBoundingClientRect();
@@ -434,9 +456,9 @@ export function SignalField() {
             }
             if (landMaterial) landMaterial.uniforms.uTime.value = elapsed;
             if (outlineMaterial) {
-              outlineMaterial.opacity = 0.72 + Math.sin(elapsed * 0.8) * 0.06;
+              outlineMaterial.opacity = 0.58 + Math.sin(elapsed * 0.8) * 0.04;
             }
-            graticuleMaterial.opacity = 0.1 + Math.sin(elapsed * 0.45) * 0.018;
+            graticuleMaterial.opacity = 0.16 + Math.sin(elapsed * 0.45) * 0.015;
           }
 
           if (sceneVisible) renderer.render(scene, camera);
