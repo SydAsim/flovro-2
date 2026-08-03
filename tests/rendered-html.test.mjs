@@ -43,6 +43,8 @@ test("server-renders the Flovro experience", async () => {
   assert.match(html, /MediLink AI/);
   assert.match(html, /Dental Front Desk Agent/);
   assert.match(html, /Start a conversation/);
+  assert.doesNotMatch(html, /INTELLIGENT SYSTEMS \/ 2026|Why Flovro/i);
+  assert.doesNotMatch(html, /A missed call is not just a call|Not another disconnected tool/i);
   assert.doesNotMatch(html, /What we build|One partner\. A connected system\./i);
   assert.doesNotMatch(html, /Voice intelligence|Demo environment/i);
   assert.doesNotMatch(html, /Connected by design|From first signal/i);
@@ -90,6 +92,7 @@ test("renders a draggable geographic globe with native page scrolling", async ()
   assert.match(styles, /touch-action: pan-y/);
   assert.match(experience, /Scroll to explore/);
   assert.doesNotMatch(experience, /hero-orbit/);
+  assert.doesNotMatch(experience, /intro-curtain|loader-word|manifesto/);
   assert.equal((experience.match(/href: "https:\/\//g) ?? []).length, 8);
   assert.match(experience, /id="web-development"/);
   assert.match(experience, /id="ai-automations"/);

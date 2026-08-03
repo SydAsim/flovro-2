@@ -162,26 +162,23 @@ export function FlovroExperience() {
       const context = gsap.context(() => {
         const intro = gsap.timeline({ defaults: { ease: "flovroEase" } });
         intro
-          .to(".loader-word", { yPercent: -110, duration: 0.7 }, 0.55)
-          .to(".loader-line", { scaleX: 1, duration: 0.9 }, 0.05)
-          .to(".intro-curtain", { yPercent: -100, duration: 1.05 }, 0.9)
           .fromTo(
             ".nav-shell",
             { y: -28, autoAlpha: 0 },
             { y: 0, autoAlpha: 1, duration: 0.8 },
-            1.1,
+            0.05,
           )
           .fromTo(
             ".hero-line > span",
             { yPercent: 115, rotate: 3 },
             { yPercent: 0, rotate: 0, stagger: 0.09, duration: 1.05 },
-            1.05,
+            0,
           )
           .fromTo(
             ".hero-reveal",
             { y: 24, autoAlpha: 0 },
             { y: 0, autoAlpha: 1, stagger: 0.08, duration: 0.75 },
-            1.35,
+            0.18,
           );
 
         ScrollTrigger.batch(".reveal", {
@@ -216,16 +213,6 @@ export function FlovroExperience() {
 
   return (
     <div className="site-shell" ref={rootRef}>
-      <div className="intro-curtain" aria-hidden="true">
-        <div className="loader-lockup">
-          <div className="loader-mask">
-            <span className="loader-word">FLOVRO</span>
-          </div>
-          <span>INTELLIGENT SYSTEMS / 2026</span>
-        </div>
-        <div className="loader-line" />
-      </div>
-
       <header className="nav-shell">
         <a className="brand" href="#top" aria-label="Flovro home">
           <BrandMark />
@@ -297,24 +284,6 @@ export function FlovroExperience() {
           <div className="scroll-cue hero-reveal" aria-hidden="true">
             <span>Scroll to explore</span>
             <i />
-          </div>
-        </section>
-
-        <section className="manifesto section-pad">
-          <div className="section-kicker reveal">Why Flovro</div>
-          <div className="manifesto-copy reveal">
-            <p>
-              A missed call is not just a call. It is a customer, a booking, a
-              job, a relationship.
-            </p>
-            <p>
-              We connect the entire journey—from first contact to the next best
-              action—so opportunity keeps moving even when your team is busy.
-            </p>
-          </div>
-          <div className="manifesto-note reveal">
-            <span>Not another disconnected tool.</span>
-            <span>A working system around your business.</span>
           </div>
         </section>
 

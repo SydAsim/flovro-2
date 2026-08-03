@@ -60,55 +60,6 @@ button {
   padding-right: clamp(24px, 4vw, 72px);
 }
 
-.intro-curtain {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  padding: clamp(24px, 4vw, 64px);
-  background: var(--mint);
-  color: var(--ink);
-  will-change: transform;
-}
-
-.loader-lockup {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.loader-mask {
-  overflow: hidden;
-}
-
-.loader-word {
-  display: block;
-  font-size: clamp(3rem, 9vw, 10rem);
-  font-weight: 650;
-  line-height: 0.75;
-  letter-spacing: -0.08em;
-  will-change: transform;
-}
-
-.loader-lockup > span {
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-}
-
-.loader-line {
-  position: absolute;
-  right: clamp(24px, 4vw, 64px);
-  bottom: clamp(24px, 4vw, 64px);
-  width: min(38vw, 560px);
-  height: 1px;
-  background: var(--ink);
-  transform: scaleX(0);
-  transform-origin: left center;
-}
-
 .nav-shell {
   position: fixed;
   top: 18px;
@@ -439,54 +390,6 @@ button {
 
 @keyframes scrollLine {
   55%, 100% { transform: translateX(100%); }
-}
-
-.manifesto {
-  display: grid;
-  grid-template-columns: minmax(150px, 0.65fr) 2.1fr 0.8fr;
-  gap: 48px;
-  padding-top: clamp(110px, 15vw, 220px);
-  padding-bottom: clamp(110px, 15vw, 220px);
-  background: var(--paper);
-  color: var(--ink);
-}
-
-.manifesto .section-kicker {
-  padding-top: 16px;
-}
-
-.manifesto-copy {
-  max-width: 940px;
-}
-
-.manifesto-copy p {
-  margin: 0;
-  font-size: clamp(2.15rem, 4.7vw, 5.2rem);
-  line-height: 1.03;
-  letter-spacing: -0.055em;
-}
-
-.manifesto-copy p + p {
-  margin-top: 0.8em;
-  color: rgba(6, 19, 15, 0.34);
-}
-
-.manifesto-note {
-  align-self: end;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 18px 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 10px;
-  line-height: 1.5;
-  text-transform: uppercase;
-}
-
-.manifesto-note span:last-child {
-  color: rgba(6, 19, 15, 0.48);
 }
 
 .proof-top h2,
@@ -1340,15 +1243,6 @@ button {
     display: none;
   }
 
-  .manifesto {
-    grid-template-columns: 0.5fr 2fr;
-  }
-
-  .manifesto-note {
-    grid-column: 2;
-    max-width: 420px;
-  }
-
   .work-overview-heading,
   .work-heading {
     grid-template-columns: 0.5fr 1.6fr;
@@ -1506,19 +1400,6 @@ button {
 
   .hero-status span {
     font-size: 7px;
-  }
-
-  .manifesto {
-    grid-template-columns: 1fr;
-    gap: 34px;
-  }
-
-  .manifesto-note {
-    grid-column: 1;
-  }
-
-  .manifesto-copy p {
-    font-size: clamp(2.25rem, 11vw, 3.5rem);
   }
 
   .work-overview-heading,
