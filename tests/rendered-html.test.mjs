@@ -41,6 +41,8 @@ test("server-renders the Flovro experience", async () => {
     (html.match(/class="section-index-link(?: [^"]*)?"/g) ?? []).length,
     6,
   );
+  const sectionNav = html.match(/<nav class="section-index[\s\S]*?<\/nav>/)?.[0] ?? "";
+  assert.doesNotMatch(sectionNav, />0[1-6]</);
   assert.match(html, /AI voice agents/);
   assert.match(html, /Business automation/);
   assert.match(html, /Digital products/);
@@ -122,6 +124,10 @@ test("renders a clean draggable geographic globe with native page scrolling", as
   assert.match(styles, /\.section-index\s*\{[^}]*grid-template-columns:\s*repeat\(6/s);
   assert.match(styles, /width:\s*var\(--section-progress\)/);
   assert.match(styles, /\.section-index-link\.is-active/);
+  assert.match(styles, /\.nav-shell\s*\{[^}]*background:\s*var\(--paper\)/s);
+  assert.match(styles, /\.section-index\s*\{[^}]*color:\s*var\(--ink\)/s);
+  assert.doesNotMatch(experience, /<span>\{number\}<\/span>/);
+  assert.doesNotMatch(styles, /\.section-index-link::after/);
   assert.match(styles, /@media \(max-width:\s*899px\)[\s\S]*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
   assert.match(styles, /@media \(max-width:\s*680px\)[\s\S]*\.section-index-link\.is-active\s*\{[^}]*display:\s*flex/s);
   assert.match(experience, /id="benefits"/);
