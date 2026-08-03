@@ -148,8 +148,57 @@ function Arrow() {
   return <span aria-hidden="true">↗</span>;
 }
 
+function scrollProjectRail(
+  rail: HTMLDivElement | null,
+  direction: -1 | 1,
+) {
+  if (!rail) return;
+
+  rail.scrollBy({
+    left: direction * Math.max(rail.clientWidth * 0.82, 320),
+    behavior: "smooth",
+  });
+}
+
+function RailControls({
+  label,
+  onPrevious,
+  onNext,
+}: {
+  label: string;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div
+      className="work-rail-controls"
+      role="group"
+      aria-label={`${label} project navigation`}
+    >
+      <span>Scroll projects</span>
+      <button
+        type="button"
+        onClick={onPrevious}
+        aria-label={`Previous ${label} project`}
+      >
+        <span aria-hidden="true">←</span>
+      </button>
+      <button
+        type="button"
+        onClick={onNext}
+        aria-label={`Next ${label} project`}
+      >
+        <span aria-hidden="true">→</span>
+      </button>
+    </div>
+  );
+}
+
 export function FlovroExperience() {
   const rootRef = useRef<HTMLDivElement>(null);
+  const webRailRef = useRef<HTMLDivElement>(null);
+  const automationRailRef = useRef<HTMLDivElement>(null);
+  const voiceRailRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const scope = rootRef.current;
@@ -320,7 +369,18 @@ export function FlovroExperience() {
               hierarchy, purposeful motion, and business-ready performance.
             </p>
           </div>
-          <div className="web-work-grid">
+          <RailControls
+            label="web development"
+            onPrevious={() => scrollProjectRail(webRailRef.current, -1)}
+            onNext={() => scrollProjectRail(webRailRef.current, 1)}
+          />
+          <div
+            className="web-work-grid work-rail"
+            ref={webRailRef}
+            role="region"
+            tabIndex={0}
+            aria-label="Web development project carousel"
+          >
             {webProjects.map((project, index) => (
               <article className={`web-work-card work-${project.theme} reveal`} key={project.href}>
                 <a href={project.href} target="_blank" rel="noreferrer">
@@ -353,7 +413,18 @@ export function FlovroExperience() {
               the tools already running daily operations.
             </p>
           </div>
-          <div className="automation-work-grid">
+          <RailControls
+            label="workflow automation"
+            onPrevious={() => scrollProjectRail(automationRailRef.current, -1)}
+            onNext={() => scrollProjectRail(automationRailRef.current, 1)}
+          />
+          <div
+            className="automation-work-grid work-rail"
+            ref={automationRailRef}
+            role="region"
+            tabIndex={0}
+            aria-label="Workflow automation project carousel"
+          >
             {automationProjects.map((project) => (
               <article className="automation-work-card reveal" key={project.title}>
                 <div className="automation-work-top">
@@ -388,7 +459,18 @@ export function FlovroExperience() {
               natural conversations, and dependable human handoffs.
             </p>
           </div>
-          <div className="voice-work-grid">
+          <RailControls
+            label="voice agent"
+            onPrevious={() => scrollProjectRail(voiceRailRef.current, -1)}
+            onNext={() => scrollProjectRail(voiceRailRef.current, 1)}
+          />
+          <div
+            className="voice-work-grid work-rail"
+            ref={voiceRailRef}
+            role="region"
+            tabIndex={0}
+            aria-label="Voice agent project carousel"
+          >
             {voiceProjects.map((project) => (
               <article className="voice-work-card reveal" key={project.title}>
                 <div className="voice-work-top">

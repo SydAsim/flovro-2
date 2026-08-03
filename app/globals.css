@@ -501,7 +501,7 @@ button {
 }
 
 .work-heading {
-  margin-bottom: clamp(65px, 9vw, 125px);
+  margin-bottom: clamp(38px, 5vw, 72px);
 }
 
 .work-heading h2 {
@@ -518,10 +518,96 @@ button {
   color: rgba(6, 19, 15, 0.54);
 }
 
-.web-work-grid {
+.work-rail-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.work-rail-controls > span {
+  margin-right: 8px;
+  opacity: 0.5;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.work-rail-controls button {
+  width: 46px;
+  height: 46px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 220ms ease,
+    color 220ms ease,
+    transform 220ms ease;
+}
+
+.work-rail-controls button:hover,
+.work-rail-controls button:focus-visible {
+  background: currentColor;
+  transform: translateY(-2px);
+}
+
+.work-rail-controls button:hover > span,
+.work-rail-controls button:focus-visible > span {
+  color: var(--paper);
+}
+
+.web-work .work-rail-controls button:hover > span,
+.web-work .work-rail-controls button:focus-visible > span,
+.voice-work .work-rail-controls button:hover > span,
+.voice-work .work-rail-controls button:focus-visible > span {
+  color: var(--ink);
+}
+
+.work-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100vw - clamp(48px, 8vw, 144px) - clamp(18px, 2.4vw, 36px)) / 2);
   gap: clamp(18px, 2.4vw, 36px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 3px 2px 20px;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 2px;
+  scrollbar-color: rgba(139, 255, 208, 0.56) transparent;
+  scrollbar-width: thin;
+  overscroll-behavior-inline: contain;
+}
+
+.work-rail::-webkit-scrollbar {
+  height: 5px;
+}
+
+.work-rail::-webkit-scrollbar-track {
+  background: rgba(6, 19, 15, 0.08);
+}
+
+.work-rail::-webkit-scrollbar-thumb {
+  border-radius: 100px;
+  background: rgba(6, 19, 15, 0.42);
+}
+
+.automation-work .work-rail::-webkit-scrollbar-track {
+  background: rgba(240, 243, 233, 0.09);
+}
+
+.automation-work .work-rail::-webkit-scrollbar-thumb {
+  background: rgba(139, 255, 208, 0.58);
+}
+
+.work-rail > article {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .web-work-card {
@@ -715,13 +801,6 @@ button {
   background:
     radial-gradient(circle at 15% 25%, rgba(143, 199, 255, 0.11), transparent 25%),
     #081914;
-}
-
-.automation-work-grid,
-.voice-work-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
 }
 
 .automation-work-card {
@@ -1254,9 +1333,8 @@ button {
     max-width: 460px;
   }
 
-  .automation-work-grid,
-  .voice-work-grid {
-    grid-template-columns: 1fr;
+  .work-rail {
+    grid-auto-columns: min(76vw, 680px);
   }
 
   .automation-work-card,
@@ -1433,8 +1511,22 @@ button {
     border-bottom: 0;
   }
 
-  .web-work-grid {
-    grid-template-columns: 1fr;
+  .work-rail {
+    grid-auto-columns: 86vw;
+    gap: 12px;
+  }
+
+  .work-rail-controls {
+    margin-bottom: 16px;
+  }
+
+  .work-rail-controls > span {
+    margin-right: 4px;
+  }
+
+  .work-rail-controls button {
+    width: 42px;
+    height: 42px;
   }
 
   .web-work-copy {

@@ -97,5 +97,14 @@ test("renders a draggable geographic globe with native page scrolling", async ()
   assert.match(experience, /id="web-development"/);
   assert.match(experience, /id="ai-automations"/);
   assert.match(experience, /id="voice-agents"/);
+  assert.equal((experience.match(/className="[^"]* work-rail"/g) ?? []).length, 3);
+  assert.match(experience, /scrollProjectRail/);
+  assert.match(experience, /rail\.scrollBy/);
+  assert.match(experience, /Web development project carousel/);
+  assert.match(experience, /Workflow automation project carousel/);
+  assert.match(experience, /Voice agent project carousel/);
+  assert.match(styles, /grid-auto-flow:\s*column/);
+  assert.match(styles, /scroll-snap-type:\s*x mandatory/);
+  assert.match(styles, /scroll-snap-align:\s*start/);
   assert.doesNotMatch(experience, /systems-section|voice-lab|flow-section|demoModes/);
 });
