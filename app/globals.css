@@ -181,7 +181,7 @@ button {
   position: absolute;
   z-index: 0;
   top: 0;
-  right: 2vw;
+  right: -6vw;
   width: 73vw;
   height: 100%;
   pointer-events: auto;
@@ -238,7 +238,7 @@ button {
 
 .hero h1 {
   margin: 0;
-  font-size: clamp(3.6rem, 8.9vw, 9.6rem);
+  font-size: clamp(4rem, 9.4vw, 10.2rem);
   font-weight: 460;
   line-height: 0.86;
   letter-spacing: -0.075em;
@@ -393,20 +393,31 @@ button {
 }
 
 .section-index {
-  position: sticky;
-  top: 92px;
+  position: fixed;
+  top: 50%;
+  right: clamp(12px, 1.4vw, 26px);
   z-index: 45;
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  width: 100%;
-  overflow-x: auto;
-  padding-top: 16px;
-  padding-bottom: 24px;
-  background: rgba(240, 243, 233, 0.94);
-  box-shadow: 0 12px 35px rgba(2, 10, 8, 0.12);
-  color: var(--ink);
-  backdrop-filter: blur(16px);
+  display: flex;
+  width: auto;
+  flex-direction: column;
+  overflow: visible;
+  padding: 14px 16px 14px 12px;
+  border: 1px solid rgba(139, 255, 208, 0.14);
+  border-radius: 22px;
+  background: rgba(3, 14, 11, 0.52);
+  box-shadow: 0 18px 50px rgba(2, 10, 8, 0.18);
+  color: var(--paper);
+  opacity: 0.74;
+  transform: translateY(-50%);
+  backdrop-filter: blur(14px);
   scrollbar-width: none;
+  transition: opacity 220ms ease, background 220ms ease;
+}
+
+.section-index:hover,
+.section-index:focus-within {
+  background: rgba(3, 14, 11, 0.78);
+  opacity: 1;
 }
 
 .section-index::-webkit-scrollbar {
@@ -417,41 +428,45 @@ button {
   position: relative;
   z-index: 1;
   display: flex;
-  min-width: 0;
+  width: 116px;
   flex-direction: column;
-  gap: 5px;
-  padding: 0 12px 17px 0;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 9px 22px 9px 6px;
+  opacity: 0.36;
+  transition: opacity 180ms ease;
 }
 
 .section-index-line {
   position: absolute;
-  right: clamp(24px, 4vw, 72px);
-  bottom: 21px;
-  left: clamp(24px, 4vw, 72px);
-  height: 1px;
+  top: 25px;
+  right: 12px;
+  bottom: 25px;
+  width: 1px;
   overflow: hidden;
-  background: rgba(6, 19, 15, 0.42);
+  background: rgba(240, 243, 233, 0.24);
   pointer-events: none;
 }
 
 .section-index-line i {
   display: block;
-  width: var(--section-progress);
-  height: 100%;
-  background: #68b900;
-  transition: width 480ms cubic-bezier(0.22, 1, 0.36, 1);
+  width: 100%;
+  height: var(--section-progress);
+  background: var(--mint);
+  transition: height 480ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .section-index-link::after {
   position: absolute;
-  bottom: -3px;
-  left: 0;
+  top: 50%;
+  right: 6px;
   width: 6px;
   height: 6px;
-  border: 1px solid var(--ink);
+  border: 1px solid rgba(240, 243, 233, 0.52);
   border-radius: 50%;
-  background: var(--paper);
+  background: var(--ink);
   content: "";
+  transform: translateY(-50%);
   transition: background 180ms ease, transform 180ms ease;
 }
 
@@ -459,22 +474,22 @@ button {
 .section-index-link.is-active::after,
 .section-index-link:hover::after,
 .section-index-link:focus-visible::after {
-  border-color: #68b900;
-  background: #68b900;
+  border-color: var(--mint);
+  background: var(--mint);
 }
 
 .section-index-link.is-active::after,
 .section-index-link:hover::after,
 .section-index-link:focus-visible::after {
-  transform: scale(1.2);
-  box-shadow: 0 0 0 4px rgba(104, 185, 0, 0.12);
+  transform: translateY(-50%) scale(1.25);
+  box-shadow: 0 0 0 4px rgba(139, 255, 208, 0.12);
 }
 
 .section-index-link > span {
   font-family: var(--font-geist-mono), monospace;
   font-size: 9px;
   letter-spacing: 0.14em;
-  opacity: 0.58;
+  opacity: 0.66;
 }
 
 .section-index-link > strong {
@@ -491,8 +506,18 @@ button {
 .section-index-link:hover > strong,
 .section-index-link:focus-visible > strong,
 .section-index-link.is-active > strong {
-  color: #3e7800;
-  transform: translateX(3px);
+  color: var(--mint);
+  transform: translateX(-3px);
+}
+
+.section-index-link.is-complete {
+  opacity: 0.56;
+}
+
+.section-index-link:hover,
+.section-index-link:focus-visible,
+.section-index-link.is-active {
+  opacity: 1;
 }
 
 #work,
@@ -1522,13 +1547,53 @@ button {
 
 @media (max-width: 680px) {
   .section-index {
-    top: 76px;
-    grid-template-columns: repeat(6, 140px);
+    top: auto;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    display: flex;
+    width: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 10px 14px 14px;
+    border-radius: 18px;
+    opacity: 0.94;
+    transform: none;
   }
 
   .section-index-line {
+    top: auto;
     right: 24px;
+    bottom: 14px;
     left: 24px;
+    width: auto;
+    height: 1px;
+  }
+
+  .section-index-line i {
+    width: var(--section-progress);
+    height: 100%;
+    transition-property: width;
+  }
+
+  .section-index-link {
+    min-width: 124px;
+    align-items: flex-start;
+    padding: 0 14px 16px 0;
+  }
+
+  .section-index-link::after {
+    top: auto;
+    right: auto;
+    bottom: -3px;
+    left: 0;
+    transform: none;
+  }
+
+  .section-index-link.is-active::after,
+  .section-index-link:hover::after,
+  .section-index-link:focus-visible::after {
+    transform: scale(1.2);
   }
 
   .nav-shell {
