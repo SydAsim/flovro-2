@@ -43,6 +43,9 @@ test("server-renders the Flovro experience", async () => {
   assert.match(html, /MediLink AI/);
   assert.match(html, /Dental Front Desk Agent/);
   assert.match(html, /Start a conversation/);
+  assert.doesNotMatch(html, /What we build|One partner\. A connected system\./i);
+  assert.doesNotMatch(html, /Voice intelligence|Demo environment/i);
+  assert.doesNotMatch(html, /Connected by design|From first signal/i);
   assert.doesNotMatch(html, /codex-preview|Building your site|react-loading-skeleton/);
 });
 
@@ -88,4 +91,5 @@ test("renders a draggable geographic globe with native page scrolling", async ()
   assert.match(experience, /id="web-development"/);
   assert.match(experience, /id="ai-automations"/);
   assert.match(experience, /id="voice-agents"/);
+  assert.doesNotMatch(experience, /systems-section|voice-lab|flow-section|demoModes/);
 });

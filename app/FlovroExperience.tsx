@@ -1,44 +1,9 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { loadGsap } from "./gsapClient";
 import { SignalField } from "./SignalField";
-
-const services = [
-  {
-    number: "01",
-    label: "AI voice agents",
-    title: "Every call becomes an opportunity.",
-    text: "Natural inbound and outbound agents qualify leads, answer questions, book appointments, recover missed calls, and know when a human should step in.",
-    tags: ["24/7 reception", "Lead qualification", "Human handoff"],
-    color: "mint",
-  },
-  {
-    number: "02",
-    label: "Business automation",
-    title: "The handoffs happen without the busywork.",
-    text: "We connect your forms, inboxes, calendars, CRM, messaging, and internal tools so information moves exactly where the next action needs it.",
-    tags: ["CRM workflows", "Appointment logic", "Follow-up"],
-    color: "lime",
-  },
-  {
-    number: "03",
-    label: "Digital products",
-    title: "Web experiences built to do more.",
-    text: "Conversion-focused websites, customer portals, dashboards, and custom applications designed as working parts of your operating system.",
-    tags: ["Web development", "Portals", "Dashboards"],
-    color: "blue",
-  },
-  {
-    number: "04",
-    label: "Custom AI",
-    title: "Intelligence shaped around your process.",
-    text: "Knowledge assistants, call analysis, document workflows, lead scoring, and reporting systems built around the way your team actually works.",
-    tags: ["AI assistants", "Call intelligence", "Reporting"],
-    color: "violet",
-  },
-];
 
 const webProjects = [
   {
@@ -169,41 +134,6 @@ const voiceProjects = [
 
 const voiceBars = [36, 62, 45, 84, 56, 100, 72, 42, 88, 52, 78, 60];
 
-const demoModes = {
-  inbound: {
-    label: "Inbound call",
-    status: "Appointment booked",
-    transcript: [
-      ["Caller", "My AC stopped working and the house is getting warm."],
-      ["Flovro agent", "I can help. Is the system making any unusual noise?"],
-      ["Caller", "No, it just stopped cooling."],
-      ["Flovro agent", "I have a technician available at 4:30 PM. Shall I reserve it?"],
-    ],
-  },
-  recovery: {
-    label: "Missed-call recovery",
-    status: "Lead recovered",
-    transcript: [
-      ["System", "Missed call detected. Recovery sequence started."],
-      ["Flovro agent", "Sorry we missed you. What can we help with today?"],
-      ["Customer", "I need a roof inspection this week."],
-      ["System", "Lead qualified, CRM updated, estimator notified."],
-    ],
-  },
-  outbound: {
-    label: "Outbound follow-up",
-    status: "Interest confirmed",
-    transcript: [
-      ["Flovro agent", "I’m following up on the quote you requested Tuesday."],
-      ["Customer", "Yes, I had one question about the timeline."],
-      ["Flovro agent", "Installation usually takes two days. Would you like a specialist to call at 2 PM?"],
-      ["System", "Callback scheduled and sales owner notified."],
-    ],
-  },
-} as const;
-
-type DemoMode = keyof typeof demoModes;
-
 function BrandMark() {
   return (
     <span className="brand-mark" aria-hidden="true">
@@ -220,7 +150,6 @@ function Arrow() {
 
 export function FlovroExperience() {
   const rootRef = useRef<HTMLDivElement>(null);
-  const [demoMode, setDemoMode] = useState<DemoMode>("inbound");
 
   useEffect(() => {
     const scope = rootRef.current;
@@ -231,68 +160,47 @@ export function FlovroExperience() {
     void loadGsap().then(({ gsap, ScrollTrigger }) => {
       if (cancelled) return;
       const context = gsap.context(() => {
-      const intro = gsap.timeline({ defaults: { ease: "flovroEase" } });
-      intro
-        .to(".loader-word", { yPercent: -110, duration: 0.7 }, 0.55)
-        .to(".loader-line", { scaleX: 1, duration: 0.9 }, 0.05)
-        .to(".intro-curtain", { yPercent: -100, duration: 1.05 }, 0.9)
-        .fromTo(
-          ".nav-shell",
-          { y: -28, autoAlpha: 0 },
-          { y: 0, autoAlpha: 1, duration: 0.8 },
-          1.1,
-        )
-        .fromTo(
-          ".hero-line > span",
-          { yPercent: 115, rotate: 3 },
-          { yPercent: 0, rotate: 0, stagger: 0.09, duration: 1.05 },
-          1.05,
-        )
-        .fromTo(
-          ".hero-reveal",
-          { y: 24, autoAlpha: 0 },
-          { y: 0, autoAlpha: 1, stagger: 0.08, duration: 0.75 },
-          1.35,
-        );
+        const intro = gsap.timeline({ defaults: { ease: "flovroEase" } });
+        intro
+          .to(".loader-word", { yPercent: -110, duration: 0.7 }, 0.55)
+          .to(".loader-line", { scaleX: 1, duration: 0.9 }, 0.05)
+          .to(".intro-curtain", { yPercent: -100, duration: 1.05 }, 0.9)
+          .fromTo(
+            ".nav-shell",
+            { y: -28, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 0.8 },
+            1.1,
+          )
+          .fromTo(
+            ".hero-line > span",
+            { yPercent: 115, rotate: 3 },
+            { yPercent: 0, rotate: 0, stagger: 0.09, duration: 1.05 },
+            1.05,
+          )
+          .fromTo(
+            ".hero-reveal",
+            { y: 24, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, stagger: 0.08, duration: 0.75 },
+            1.35,
+          );
 
-      ScrollTrigger.batch(".reveal", {
-        start: "top 84%",
-        once: true,
-        onEnter: (items) =>
-          gsap.fromTo(
-            items,
-            { y: 54, autoAlpha: 0 },
-            {
-              y: 0,
-              autoAlpha: 1,
-              duration: 1,
-              stagger: 0.08,
-              ease: "flovroEase",
-              overwrite: true,
-            },
-          ),
-      });
-
-      gsap
-        .timeline({
-          scrollTrigger: {
-            trigger: ".flow-map",
-            start: "top 72%",
-            once: true,
-          },
-        })
-        .fromTo(
-          ".flow-line-fill",
-          { scaleY: 0 },
-          { scaleY: 1, duration: 1.7, ease: "power2.inOut" },
-        )
-        .fromTo(
-          ".flow-node",
-          { y: 32, autoAlpha: 0 },
-          { y: 0, autoAlpha: 1, stagger: 0.13, duration: 0.7, ease: "flovroEase" },
-          0.15,
-        );
-
+        ScrollTrigger.batch(".reveal", {
+          start: "top 84%",
+          once: true,
+          onEnter: (items) =>
+            gsap.fromTo(
+              items,
+              { y: 54, autoAlpha: 0 },
+              {
+                y: 0,
+                autoAlpha: 1,
+                duration: 1,
+                stagger: 0.08,
+                ease: "flovroEase",
+                overwrite: true,
+              },
+            ),
+        });
       }, scope);
 
       teardown = () => {
@@ -305,32 +213,6 @@ export function FlovroExperience() {
       teardown?.();
     };
   }, []);
-
-  useEffect(() => {
-    const scope = rootRef.current;
-    if (!scope) return;
-    let cancelled = false;
-    let teardown: (() => void) | undefined;
-
-    void loadGsap().then(({ gsap }) => {
-      if (cancelled) return;
-      const context = gsap.context(() => {
-        gsap.fromTo(
-          ".demo-panel-inner",
-          { autoAlpha: 0, y: 12 },
-          { autoAlpha: 1, y: 0, duration: 0.45, ease: "power3.out" },
-        );
-      }, scope);
-      teardown = () => context.revert();
-    });
-
-    return () => {
-      cancelled = true;
-      teardown?.();
-    };
-  }, [demoMode]);
-
-  const demo = demoModes[demoMode];
 
   return (
     <div className="site-shell" ref={rootRef}>
@@ -350,7 +232,6 @@ export function FlovroExperience() {
           <span>FLOVRO</span>
         </a>
         <nav aria-label="Primary navigation">
-          <a href="#systems">Systems</a>
           <a href="#work">Work</a>
           <a href="#process">Process</a>
         </nav>
@@ -385,7 +266,7 @@ export function FlovroExperience() {
                 products that help businesses respond faster and operate with
                 less friction.
               </p>
-              <a className="circle-link" href="#systems" aria-label="Explore our systems">
+              <a className="circle-link" href="#work" aria-label="Explore our work">
                 <span>Explore</span>
                 <Arrow />
               </a>
@@ -434,50 +315,6 @@ export function FlovroExperience() {
           <div className="manifesto-note reveal">
             <span>Not another disconnected tool.</span>
             <span>A working system around your business.</span>
-          </div>
-        </section>
-
-        <section className="systems-section" id="systems">
-          <div className="systems-inner">
-            <div className="systems-heading">
-              <div>
-                <p className="section-kicker">What we build</p>
-                <h2>One partner.<br />A connected system.</h2>
-              </div>
-              <p>
-                Modular enough to start where the friction is. Connected enough
-                to transform what happens next.
-              </p>
-            </div>
-            <div className="service-rail" aria-label="Flovro systems" tabIndex={0}>
-              <div className="service-track">
-                {services.map((service) => (
-                  <article
-                    className={`service-card service-${service.color}`}
-                    key={service.number}
-                  >
-                    <div className="service-card-top">
-                      <span>{service.number}</span>
-                      <span>{service.label}</span>
-                    </div>
-                    <div className="service-graphic" aria-hidden="true">
-                      <i />
-                      <i />
-                      <i />
-                    </div>
-                    <div className="service-card-copy">
-                      <h3>{service.title}</h3>
-                      <p>{service.text}</p>
-                    </div>
-                    <div className="tag-row">
-                      {service.tags.map((tag) => (
-                        <span key={tag}>{tag}</span>
-                      ))}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
 
@@ -612,97 +449,6 @@ export function FlovroExperience() {
                   Build an agent like this <Arrow />
                 </a>
               </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="voice-lab section-pad" id="difference">
-          <div className="voice-intro reveal">
-            <p className="section-kicker">Voice intelligence</p>
-            <h2>Conversations that<br />actually do something.</h2>
-            <p>
-              The agent listens, understands intent, takes action across your
-              stack, and brings in a person when judgment matters.
-            </p>
-          </div>
-
-          <div className="voice-console reveal">
-            <div className="console-topbar">
-              <div>
-                <span className="console-live"><i /> Live system</span>
-                <span>Flovro Voice / Demo environment</span>
-              </div>
-              <span>EN-US · 00:42</span>
-            </div>
-            <div className="console-layout">
-              <div className="console-sidebar">
-                {(Object.keys(demoModes) as DemoMode[]).map((mode) => (
-                  <button
-                    className={demoMode === mode ? "active" : ""}
-                    key={mode}
-                    onClick={() => setDemoMode(mode)}
-                    type="button"
-                  >
-                    <span>{demoModes[mode].label}</span>
-                    <i />
-                  </button>
-                ))}
-              </div>
-              <div className="demo-panel">
-                <div className="demo-panel-inner">
-                  <div className="wave-field" aria-hidden="true">
-                    {Array.from({ length: 44 }, (_, index) => (
-                      <i key={index} style={{ "--wave": index } as CSSProperties} />
-                    ))}
-                  </div>
-                  <div className="demo-status">
-                    <span>{demo.label}</span>
-                    <strong>{demo.status}</strong>
-                  </div>
-                  <div className="transcript">
-                    {demo.transcript.map(([speaker, line], index) => (
-                      <div className="transcript-row" key={`${speaker}-${index}`}>
-                        <span>{speaker}</span>
-                        <p>{line}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="console-footer">
-              <span>CRM updated</span>
-              <span>Confirmation sent</span>
-              <span>Team notified</span>
-            </div>
-          </div>
-        </section>
-
-        <section className="flow-section section-pad">
-          <div className="flow-heading reveal">
-            <p className="section-kicker">Connected by design</p>
-            <h2>From first signal<br />to finished action.</h2>
-            <p>
-              Your customer experiences one seamless journey. Behind it,
-              Flovro coordinates every tool and handoff.
-            </p>
-          </div>
-          <div className="flow-map">
-            <div className="flow-line"><div className="flow-line-fill" /></div>
-            {[
-              ["01", "Customer signal", "Call, form, chat, or missed connection"],
-              ["02", "AI understanding", "Intent, urgency, context, and qualification"],
-              ["03", "Business action", "Booking, routing, payment, or human handoff"],
-              ["04", "System update", "CRM, calendar, notifications, and reporting"],
-            ].map(([number, title, text]) => (
-              <div className="flow-node" key={number}>
-                <span>{number}</span>
-                <div>
-                  <h3>{title}</h3>
-                  <p>{text}</p>
-                </div>
-                <i aria-hidden="true" />
-              </div>
             ))}
           </div>
         </section>
