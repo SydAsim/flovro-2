@@ -100,7 +100,7 @@ test("renders a clean draggable geographic globe with native page scrolling", as
   assert.match(styles, /pointer-events: auto/);
   assert.match(styles, /cursor: grab/);
   assert.match(styles, /touch-action: pan-y/);
-  assert.match(styles, /right:\s*-6vw/);
+  assert.match(styles, /right:\s*2vw/);
   assert.match(experience, /className="section-index section-pad"/);
   assert.match(experience, /const sectionLinks =/);
   assert.match(experience, /label: "Benefits"/);
