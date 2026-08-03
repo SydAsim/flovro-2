@@ -30,9 +30,13 @@ test("server-renders the Flovro experience", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>Flovro — AI Voice Agents &amp; Business Automation<\/title>/i);
-  assert.match(html, /Calls answered\./);
-  assert.match(html, /Work automated\./);
-  assert.match(html, /Growth in motion\./);
+  assert.match(html, /Turn Your Vision/);
+  assert.match(html, /Into the Growth/);
+  assert.match(html, /You Deserve\./);
+  assert.match(
+    html,
+    /AI voice agents, powerful websites, and intelligent automations[^<]*built to move your business forward\./,
+  );
   assert.equal(
     (html.match(/class="section-index-link(?: [^"]*)?"/g) ?? []).length,
     6,
@@ -100,7 +104,7 @@ test("renders a clean draggable geographic globe with native page scrolling", as
   assert.match(styles, /pointer-events: auto/);
   assert.match(styles, /cursor: grab/);
   assert.match(styles, /touch-action: pan-y/);
-  assert.match(styles, /right:\s*2vw/);
+  assert.match(styles, /right:\s*-6vw/);
   assert.match(experience, /className="section-index section-pad"/);
   assert.match(experience, /const sectionLinks =/);
   assert.match(experience, /label: "Benefits"/);
@@ -109,8 +113,9 @@ test("renders a clean draggable geographic globe with native page scrolling", as
   assert.match(experience, /requestAnimationFrame\(updateActiveSection\)/);
   assert.match(experience, /--section-progress/);
   assert.match(experience, /aria-current=/);
-  assert.match(styles, /position:\s*sticky/);
-  assert.match(styles, /width:\s*var\(--section-progress\)/);
+  assert.match(styles, /\.section-index\s*\{[^}]*position:\s*fixed/s);
+  assert.match(styles, /\.section-index\s*\{[^}]*right:\s*clamp/s);
+  assert.match(styles, /height:\s*var\(--section-progress\)/);
   assert.match(styles, /\.section-index-link\.is-active/);
   assert.match(experience, /id="benefits"/);
   assert.match(experience, /id="industries"/);
