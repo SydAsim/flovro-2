@@ -113,8 +113,12 @@ test("renders a clean draggable geographic globe with native page scrolling", as
   assert.match(experience, /requestAnimationFrame\(updateActiveSection\)/);
   assert.match(experience, /--section-progress/);
   assert.match(experience, /aria-current=/);
-  assert.match(styles, /\.section-index\s*\{[^}]*position:\s*fixed/s);
-  assert.match(styles, /\.section-index\s*\{[^}]*top:\s*88px/s);
+  assert.match(
+    experience,
+    /<header className="nav-shell">[\s\S]*className="section-index section-pad"[\s\S]*<\/header>/,
+  );
+  assert.match(styles, /\.section-index\s*\{[^}]*position:\s*relative/s);
+  assert.match(styles, /\.section-index\s*\{[^}]*background:\s*transparent/s);
   assert.match(styles, /\.section-index\s*\{[^}]*grid-template-columns:\s*repeat\(6/s);
   assert.match(styles, /width:\s*var\(--section-progress\)/);
   assert.match(styles, /\.section-index-link\.is-active/);
