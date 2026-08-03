@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { createGlobeNetwork } from "./GlobeNetwork";
 import { loadGsap } from "./gsapClient";
 
 const GLOBE_RADIUS = 1.58;
@@ -336,6 +337,13 @@ export function SignalField() {
         fillLight.position.set(3.5, -2.2, 3.8);
         scene.add(ambientLight, keyLight, fillLight);
 
+        const globeNetwork = createGlobeNetwork({
+          globe,
+          signal,
+          radius: GLOBE_RADIUS,
+          compact: isCompactViewport,
+        });
+
         const resize = () => {
           const { width, height } = host.getBoundingClientRect();
           renderer.setSize(width, height, false);
@@ -428,12 +436,20 @@ export function SignalField() {
         );
         visibilityObserver.observe(host);
         const clock = new THREE.Clock();
+        let animationTime = 0;
+        let tabVisible = !document.hidden;
+        const onVisibilityChange = () => {
+          tabVisible = !document.hidden;
+          clock.getDelta();
+        };
+        document.addEventListener("visibilitychange", onVisibilityChange);
 
         const render = () => {
           const delta = Math.min(clock.getDelta(), 0.05);
-          const elapsed = clock.elapsedTime;
+          const canRender = sceneVisible && tabVisible;
 
-          if (sceneVisible && !reduceMotion) {
+          if (canRender && !reduceMotion) {
+            animationTime += delta;
             if (!dragging) {
               globe.rotation.y += delta * (0.045 + spinVelocityY);
               globe.rotation.x = THREE.MathUtils.clamp(
@@ -454,14 +470,17 @@ export function SignalField() {
                 delta,
               );
             }
-            if (landMaterial) landMaterial.uniforms.uTime.value = elapsed;
+            if (landMaterial) landMaterial.uniforms.uTime.value = animationTime;
             if (outlineMaterial) {
-              outlineMaterial.opacity = 0.58 + Math.sin(elapsed * 0.8) * 0.04;
+              outlineMaterial.opacity =
+                0.58 + Math.sin(animationTime * 0.8) * 0.04;
             }
-            graticuleMaterial.opacity = 0.16 + Math.sin(elapsed * 0.45) * 0.015;
+            graticuleMaterial.opacity =
+              0.16 + Math.sin(animationTime * 0.45) * 0.015;
+            globeNetwork.update(animationTime);
           }
 
-          if (sceneVisible) renderer.render(scene, camera);
+          if (canRender) renderer.render(scene, camera);
           frame = window.requestAnimationFrame(render);
         };
         render();
@@ -470,6 +489,7 @@ export function SignalField() {
           window.cancelAnimationFrame(frame);
           visibilityObserver.disconnect();
           resizeObserver.disconnect();
+          document.removeEventListener("visibilitychange", onVisibilityChange);
           context.revert();
           canvas.removeEventListener("pointerdown", onPointerDown);
           canvas.removeEventListener("pointermove", onPointerMove);
@@ -477,6 +497,7 @@ export function SignalField() {
           canvas.removeEventListener("pointercancel", finishPointerDrag);
           canvas.removeEventListener("lostpointercapture", finishPointerDrag);
           canvas.classList.remove("is-dragging");
+          globeNetwork.dispose();
           geometries.forEach((geometry) => geometry.dispose());
           materials.forEach((material) => material.dispose());
           renderer.dispose();

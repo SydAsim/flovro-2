@@ -56,6 +56,10 @@ test("renders a draggable geographic globe with native page scrolling", async ()
     new URL("../app/SignalField.tsx", import.meta.url),
     "utf8",
   );
+  const globeNetwork = await readFile(
+    new URL("../app/GlobeNetwork.ts", import.meta.url),
+    "utf8",
+  );
   const experience = await readFile(
     new URL("../app/FlovroExperience.tsx", import.meta.url),
     "utf8",
@@ -81,12 +85,28 @@ test("renders a draggable geographic globe with native page scrolling", async ()
   assert.match(signalField, /globe\.rotation\.y \+= deltaX \* 0\.006/);
   assert.match(signalField, /THREE\.MathUtils\.damp/);
   assert.match(signalField, /visibilityObserver/);
+  assert.match(signalField, /createGlobeNetwork/);
+  assert.match(signalField, /document\.hidden/);
+  assert.match(signalField, /visibilitychange/);
+  assert.match(signalField, /globeNetwork\.update/);
   assert.doesNotMatch(signalField, /heroTimeline|scrollRig/);
   assert.doesNotMatch(signalField, /["']wheel["']|touchmove/);
   assert.doesNotMatch(signalField, /TubeGeometry|InstancedMesh|routeTrail/);
   assert.doesNotMatch(signalField, /createSignalPointMaterial|orbiter/);
   assert.doesNotMatch(signalField, /earth-(?:day|night)\.jpg/);
   assert.doesNotMatch(signalField, /atmosphereGeometry/);
+  assert.match(globeNetwork, /function createGlobeNode/);
+  assert.match(globeNetwork, /function createConnectionArc/);
+  assert.match(globeNetwork, /function createMovingParticle/);
+  assert.match(globeNetwork, /function createAirplaneMarker/);
+  assert.match(globeNetwork, /function createOrbitingSatellite/);
+  assert.match(globeNetwork, /function createOrbitRing/);
+  assert.match(globeNetwork, /THREE\.CatmullRomCurve3/);
+  assert.match(globeNetwork, /getPointAt/);
+  assert.match(globeNetwork, /getTangentAt/);
+  assert.match(globeNetwork, /depthTest:\s*true/);
+  assert.match(globeNetwork, /const routeCount = compact \? 4 : ROUTES\.length/);
+  assert.match(globeNetwork, /const satelliteCount = compact \? 2/);
   assert.match(styles, /pointer-events: auto/);
   assert.match(styles, /cursor: grab/);
   assert.match(styles, /touch-action: pan-y/);
