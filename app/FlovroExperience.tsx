@@ -337,9 +337,30 @@ export function FlovroExperience() {
           <BrandMark />
           <span>FLOVRO</span>
         </a>
-        <nav aria-label="Primary navigation">
-          <a href="#work">Work</a>
-          <a href="#process">Process</a>
+        <nav
+          className="section-index section-pad"
+          aria-label="Page sections"
+          ref={sectionIndexRef}
+          style={
+            {
+              "--section-progress": `${(activeSection / (sectionLinks.length - 1)) * 100}%`,
+            } as CSSProperties
+          }
+        >
+          <span className="section-index-line" aria-hidden="true">
+            <i />
+          </span>
+          {sectionLinks.map(({ number, label, href }, index) => (
+            <a
+              className={`section-index-link${index < activeSection ? " is-complete" : ""}${index === activeSection ? " is-active" : ""}`}
+              href={href}
+              key={href}
+              aria-current={index === activeSection ? "location" : undefined}
+            >
+              <span>{number}</span>
+              <strong>{label}</strong>
+            </a>
+          ))}
         </nav>
         <a className="nav-cta" href="#contact">
           Start a project <Arrow />
@@ -404,32 +425,6 @@ export function FlovroExperience() {
             <i />
           </div>
         </section>
-
-        <nav
-          className="section-index section-pad"
-          aria-label="Page sections"
-          ref={sectionIndexRef}
-          style={
-            {
-              "--section-progress": `${(activeSection / (sectionLinks.length - 1)) * 100}%`,
-            } as CSSProperties
-          }
-        >
-          <span className="section-index-line" aria-hidden="true">
-            <i />
-          </span>
-          {sectionLinks.map(({ number, label, href }, index) => (
-            <a
-              className={`section-index-link${index < activeSection ? " is-complete" : ""}${index === activeSection ? " is-active" : ""}`}
-              href={href}
-              key={href}
-              aria-current={index === activeSection ? "location" : undefined}
-            >
-              <span>{number}</span>
-              <strong>{label}</strong>
-            </a>
-          ))}
-        </nav>
 
         <section className="work-overview section-pad" id="work">
           <div className="work-overview-heading reveal">
