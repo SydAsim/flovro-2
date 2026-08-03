@@ -114,8 +114,9 @@ test("renders a clean draggable geographic globe with native page scrolling", as
   assert.match(experience, /--section-progress/);
   assert.match(experience, /aria-current=/);
   assert.match(styles, /\.section-index\s*\{[^}]*position:\s*fixed/s);
-  assert.match(styles, /\.section-index\s*\{[^}]*right:\s*clamp/s);
-  assert.match(styles, /height:\s*var\(--section-progress\)/);
+  assert.match(styles, /\.section-index\s*\{[^}]*top:\s*88px/s);
+  assert.match(styles, /\.section-index\s*\{[^}]*grid-template-columns:\s*repeat\(6/s);
+  assert.match(styles, /width:\s*var\(--section-progress\)/);
   assert.match(styles, /\.section-index-link\.is-active/);
   assert.match(experience, /id="benefits"/);
   assert.match(experience, /id="industries"/);
