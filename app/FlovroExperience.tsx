@@ -135,22 +135,20 @@ const voiceProjects = [
 const voiceBars = [36, 62, 45, 84, 56, 100, 72, 42, 88, 52, 78, 60];
 
 const sectionLinks = [
-  { number: "01", label: "Work", href: "#work", id: "work" },
+  { label: "Work", href: "#work", id: "work" },
   {
-    number: "02",
     label: "Services",
     href: "#web-development",
     id: "web-development",
   },
-  { number: "03", label: "Benefits", href: "#benefits", id: "benefits" },
+  { label: "Benefits", href: "#benefits", id: "benefits" },
   {
-    number: "04",
     label: "Industries",
     href: "#industries",
     id: "industries",
   },
-  { number: "05", label: "Process", href: "#process", id: "process" },
-  { number: "06", label: "Contact", href: "#contact", id: "contact" },
+  { label: "Process", href: "#process", id: "process" },
+  { label: "Contact", href: "#contact", id: "contact" },
 ] as const;
 
 function BrandMark() {
@@ -350,14 +348,13 @@ export function FlovroExperience() {
           <span className="section-index-line" aria-hidden="true">
             <i />
           </span>
-          {sectionLinks.map(({ number, label, href }, index) => (
+          {sectionLinks.map(({ label, href }, index) => (
             <a
               className={`section-index-link${index < activeSection ? " is-complete" : ""}${index === activeSection ? " is-active" : ""}`}
               href={href}
               key={href}
               aria-current={index === activeSection ? "location" : undefined}
             >
-              <span>{number}</span>
               <strong>{label}</strong>
             </a>
           ))}
