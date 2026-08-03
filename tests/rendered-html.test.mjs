@@ -30,9 +30,10 @@ test("server-renders the Flovro experience", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>Flovro — AI Voice Agents &amp; Business Automation<\/title>/i);
-  assert.match(html, /Every conversation\./);
-  assert.match(html, /Every workflow\./);
-  assert.match(html, /In motion\./);
+  assert.match(html, /Calls answered\./);
+  assert.match(html, /Work automated\./);
+  assert.match(html, /Growth in motion\./);
+  assert.equal((html.match(/class="section-index-link"/g) ?? []).length, 6);
   assert.match(html, /AI voice agents/);
   assert.match(html, /Business automation/);
   assert.match(html, /Digital products/);
@@ -96,6 +97,12 @@ test("renders a clean draggable geographic globe with native page scrolling", as
   assert.match(styles, /pointer-events: auto/);
   assert.match(styles, /cursor: grab/);
   assert.match(styles, /touch-action: pan-y/);
+  assert.match(styles, /right:\s*-6vw/);
+  assert.match(experience, /className="section-index section-pad"/);
+  assert.match(experience, /\["03", "Benefits", "#benefits"\]/);
+  assert.match(experience, /\["06", "Contact", "#contact"\]/);
+  assert.match(experience, /id="benefits"/);
+  assert.match(experience, /id="industries"/);
   assert.match(experience, /Scroll to explore/);
   assert.doesNotMatch(experience, /hero-orbit/);
   assert.doesNotMatch(experience, /intro-curtain|loader-word|manifesto/);
