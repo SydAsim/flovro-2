@@ -400,9 +400,9 @@ button {
   gap: 0;
   width: min(56vw, 760px);
   max-width: 100%;
-  height: 48px;
+  height: 52px;
   overflow-x: auto;
-  padding: 2px 8px 12px;
+  padding: 3px 8px 13px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -432,7 +432,8 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 0 6px 8px;
+  justify-content: center;
+  padding: 1px 5px 9px;
   opacity: 0.48;
   transition: opacity 180ms ease, transform 180ms ease;
 }
@@ -440,7 +441,7 @@ button {
 .section-index-line {
   position: absolute;
   right: 8px;
-  bottom: 7px;
+  bottom: 6px;
   left: 8px;
   height: 1px;
   overflow: hidden;
@@ -487,7 +488,8 @@ button {
 
 .section-index-link > span {
   font-family: var(--font-geist-mono), monospace;
-  font-size: 7px;
+  font-size: 7.5px;
+  line-height: 1;
   letter-spacing: 0.14em;
   opacity: 0.66;
 }
@@ -495,9 +497,10 @@ button {
 .section-index-link > strong {
   overflow: hidden;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(0.78rem, 0.9vw, 0.96rem);
+  font-size: clamp(0.86rem, 1vw, 1rem);
   font-style: italic;
   font-weight: 400;
+  line-height: 1.05;
   text-overflow: ellipsis;
   white-space: nowrap;
   transition: color 180ms ease, transform 180ms ease;
@@ -1501,7 +1504,24 @@ button {
   .nav-shell .section-index {
     display: grid;
     width: 100%;
-    grid-template-columns: repeat(6, 104px);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    height: 46px;
+    overflow: hidden;
+    padding-right: 2px;
+    padding-left: 2px;
+  }
+
+  .section-index-link {
+    padding-right: 2px;
+    padding-left: 2px;
+  }
+
+  .section-index-link > span {
+    display: none;
+  }
+
+  .section-index-link > strong {
+    font-size: clamp(0.75rem, 1.55vw, 0.88rem);
   }
 
   .hero {
@@ -1551,12 +1571,13 @@ button {
 @media (max-width: 680px) {
   .section-index {
     position: relative;
-    display: grid;
-    grid-template-columns: repeat(6, 92px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
-    height: 44px;
-    overflow-x: auto;
-    padding: 2px 4px 11px;
+    height: 42px;
+    overflow: hidden;
+    padding: 0 4px 9px;
     border-radius: 0;
     transform: none;
   }
@@ -1568,9 +1589,22 @@ button {
   }
 
   .section-index-link {
-    min-width: 92px;
-    padding-right: 4px;
-    padding-left: 4px;
+    display: none;
+    min-width: 0;
+    width: 100%;
+    padding: 4px 0 8px;
+  }
+
+  .section-index-link.is-active {
+    display: flex;
+  }
+
+  .section-index-link.is-active::after {
+    left: clamp(4px, var(--section-progress), calc(100% - 4px));
+  }
+
+  .section-index-link > strong {
+    font-size: 0.88rem;
   }
 
   .nav-shell {
@@ -1581,13 +1615,24 @@ button {
   }
 
   .nav-cta {
+    justify-content: center;
+    width: 40px;
+    height: 40px;
     gap: 8px;
-    padding: 11px 14px;
-    font-size: 10px;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .nav-cta > span {
+    font-size: 13px;
   }
 
   .brand {
     font-size: 11px;
+  }
+
+  .brand > span:last-child {
+    display: none;
   }
 
   .hero {
