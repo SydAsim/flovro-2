@@ -38,13 +38,15 @@ type PulsingNode = {
   phase: number;
 };
 
-type SatelliteOrbit = {
-  object: THREE.Group;
+type OrbitingGlyph = {
+  object: THREE.Object3D;
   radius: number;
   speed: number;
   phase: number;
   scale: number;
 };
+
+type OrbitGlyphKind = "satellite" | "ship" | "airplane" | "cube";
 
 const ROUTES: RouteDefinition[] = [
   {
@@ -173,6 +175,52 @@ function createAirplaneGeometry() {
     new THREE.Vector3(-0.054, 0, 0.023),
     new THREE.Vector3(-0.032, 0, 0),
     new THREE.Vector3(-0.054, 0, -0.023),
+  ]);
+}
+
+function createShipGeometry() {
+  const segments: Array<[THREE.Vector3, THREE.Vector3]> = [];
+  const point = (x: number, y: number) => new THREE.Vector3(x, y, 0);
+  const addSegment = (x1: number, y1: number, x2: number, y2: number) => {
+    segments.push([point(x1, y1), point(x2, y2)]);
+  };
+  const addRectangle = (x: number, y: number, width: number, height: number) => {
+    addSegment(x, y, x + width, y);
+    addSegment(x + width, y, x + width, y + height);
+    addSegment(x + width, y + height, x, y + height);
+    addSegment(x, y + height, x, y);
+  };
+
+  addSegment(-0.09, -0.035, 0.09, -0.035);
+  addSegment(0.09, -0.035, 0.058, -0.073);
+  addSegment(0.058, -0.073, -0.06, -0.073);
+  addSegment(-0.06, -0.073, -0.09, -0.035);
+  addSegment(-0.075, -0.015, 0.07, -0.015);
+  addRectangle(-0.06, -0.015, 0.04, 0.042);
+  addRectangle(-0.016, -0.015, 0.04, 0.052);
+  addRectangle(0.028, -0.015, 0.035, 0.035);
+  addRectangle(-0.052, 0.027, 0.028, 0.026);
+  addSegment(-0.038, 0.053, -0.038, 0.086);
+  addSegment(-0.038, 0.086, -0.015, 0.086);
+
+  return new THREE.BufferGeometry().setFromPoints(segments.flat());
+}
+
+function createCubeGeometry() {
+  const source = new THREE.BoxGeometry(0.13, 0.13, 0.13, 1, 1, 1);
+  const geometry = new THREE.EdgesGeometry(source, 1);
+  source.dispose();
+  return geometry;
+}
+
+function createSatelliteAntennaGeometry() {
+  return new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0.035, 0),
+    new THREE.Vector3(0, 0.1, 0),
+    new THREE.Vector3(0, 0.1, 0),
+    new THREE.Vector3(-0.026, 0.122, 0),
+    new THREE.Vector3(0, 0.1, 0),
+    new THREE.Vector3(0.026, 0.122, 0),
   ]);
 }
 
@@ -307,13 +355,16 @@ function createOrbitingSatellite(
   panelGeometry: THREE.PlaneGeometry,
   glowGeometry: THREE.SphereGeometry,
   wireMaterial: THREE.MeshBasicMaterial,
+  lineMaterial: THREE.LineBasicMaterial,
   glowMaterial: THREE.MeshBasicMaterial,
+  antennaGeometry: THREE.BufferGeometry,
 ) {
   const object = new THREE.Group();
   const body = new THREE.Mesh(bodyGeometry, wireMaterial);
   const leftPanel = new THREE.Mesh(panelGeometry, wireMaterial);
   const rightPanel = new THREE.Mesh(panelGeometry, wireMaterial);
   const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+  const antenna = new THREE.LineSegments(antennaGeometry, lineMaterial);
 
   leftPanel.rotation.x = Math.PI / 2;
   rightPanel.rotation.x = Math.PI / 2;
@@ -322,8 +373,24 @@ function createOrbitingSatellite(
   body.renderOrder = 7;
   leftPanel.renderOrder = 7;
   rightPanel.renderOrder = 7;
+  antenna.renderOrder = 7;
   glow.renderOrder = 6;
-  object.add(glow, body, leftPanel, rightPanel);
+  object.add(glow, body, leftPanel, rightPanel, antenna);
+  return object;
+}
+
+function createLineOrbitingGlyph(
+  geometry: THREE.BufferGeometry,
+  lineMaterial: THREE.LineBasicMaterial,
+  glowGeometry: THREE.SphereGeometry,
+  glowMaterial: THREE.MeshBasicMaterial,
+) {
+  const object = new THREE.Group();
+  const glyph = new THREE.LineSegments(geometry, lineMaterial);
+  const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+  glyph.renderOrder = 7;
+  glow.renderOrder = 6;
+  object.add(glow, glyph);
   return object;
 }
 
@@ -540,6 +607,16 @@ export function createGlobeNetwork({
       side: THREE.DoubleSide,
     }),
   );
+  const orbitGlyphLineMaterial = ownMaterial(
+    new THREE.LineBasicMaterial({
+      color: 0xd6fff1,
+      transparent: true,
+      opacity: 0.74,
+      depthTest: true,
+      depthWrite: false,
+      blending: THREE.NormalBlending,
+    }),
+  );
   const satelliteGlowMaterial = ownMaterial(
     new THREE.MeshBasicMaterial({
       color: 0x61dcb9,
@@ -559,6 +636,11 @@ export function createGlobeNetwork({
   const satelliteGlowGeometry = ownGeometry(
     new THREE.SphereGeometry(0.105, 10, 8),
   );
+  const satelliteAntennaGeometry = ownGeometry(
+    createSatelliteAntennaGeometry(),
+  );
+  const orbitShipGeometry = ownGeometry(createShipGeometry());
+  const orbitCubeGeometry = ownGeometry(createCubeGeometry());
 
   const orbitDefinitions = [
     { radius: radius + 0.5, rotation: [0.94, 0.12, -0.28] as const },
@@ -574,31 +656,55 @@ export function createGlobeNetwork({
     return root;
   });
 
-  const satelliteDefinitions = [
-    { orbit: 0, speed: 0.055, phase: 0.08, scale: 0.8 },
-    { orbit: 1, speed: -0.042, phase: 0.47, scale: 0.72 },
-    { orbit: 0, speed: 0.036, phase: 0.72, scale: 0.64 },
+  const orbitGlyphDefinitions: Array<{
+    kind: OrbitGlyphKind;
+    orbit: number;
+    speed: number;
+    phase: number;
+    scale: number;
+  }> = [
+    { kind: "satellite", orbit: 0, speed: 0.052, phase: 0.08, scale: 0.78 },
+    { kind: "ship", orbit: 1, speed: -0.038, phase: 0.32, scale: 0.82 },
+    { kind: "airplane", orbit: 0, speed: 0.045, phase: 0.58, scale: 1.08 },
+    { kind: "cube", orbit: 1, speed: -0.032, phase: 0.78, scale: 0.8 },
   ];
-  const satelliteCount = compact ? 2 : satelliteDefinitions.length;
-  const satellites: SatelliteOrbit[] = satelliteDefinitions
-    .slice(0, satelliteCount)
-    .map((definition) => {
-      const object = createOrbitingSatellite(
-        satelliteBodyGeometry,
-        satellitePanelGeometry,
-        satelliteGlowGeometry,
-        satelliteWireMaterial,
-        satelliteGlowMaterial,
-      );
+  const orbitingGlyphs: OrbitingGlyph[] = orbitGlyphDefinitions.map(
+    (definition) => {
+      let object: THREE.Object3D;
+      if (definition.kind === "satellite") {
+        object = createOrbitingSatellite(
+          satelliteBodyGeometry,
+          satellitePanelGeometry,
+          satelliteGlowGeometry,
+          satelliteWireMaterial,
+          orbitGlyphLineMaterial,
+          satelliteGlowMaterial,
+          satelliteAntennaGeometry,
+        );
+      } else {
+        const geometry =
+          definition.kind === "ship"
+            ? orbitShipGeometry
+            : definition.kind === "cube"
+              ? orbitCubeGeometry
+              : airplaneGeometry;
+        object = createLineOrbitingGlyph(
+          geometry,
+          orbitGlyphLineMaterial,
+          satelliteGlowGeometry,
+          satelliteGlowMaterial,
+        );
+      }
       orbitRoots[definition.orbit].add(object);
       return {
         object,
         radius: orbitDefinitions[definition.orbit].radius,
         speed: definition.speed,
         phase: definition.phase,
-        scale: definition.scale,
+        scale: definition.scale * (compact ? 0.86 : 1),
       };
-    });
+    },
+  );
 
   const update = (elapsed: number) => {
     pathMarkers.forEach((marker) => {
@@ -616,21 +722,21 @@ export function createGlobeNetwork({
       node.ring.material.opacity = (1 - pulse) * 0.28;
     });
 
-    satellites.forEach((satellite, index) => {
-      const angle = (elapsed * satellite.speed + satellite.phase) * Math.PI * 2;
+    orbitingGlyphs.forEach((glyph, index) => {
+      const angle = (elapsed * glyph.speed + glyph.phase) * Math.PI * 2;
       tempPoint.set(
-        Math.cos(angle) * satellite.radius,
-        Math.sin(angle) * satellite.radius,
+        Math.cos(angle) * glyph.radius,
+        Math.sin(angle) * glyph.radius,
         0,
       );
       tempTangent.set(-Math.sin(angle), Math.cos(angle), 0).normalize();
       tempUp.copy(tempPoint).normalize();
       tempSide.crossVectors(tempTangent, tempUp).normalize();
       tempMatrix.makeBasis(tempTangent, tempUp, tempSide);
-      satellite.object.position.copy(tempPoint);
-      satellite.object.quaternion.setFromRotationMatrix(tempMatrix);
-      satellite.object.scale.setScalar(
-        satellite.scale * (1 + Math.sin(elapsed * 0.45 + index) * 0.025),
+      glyph.object.position.copy(tempPoint);
+      glyph.object.quaternion.setFromRotationMatrix(tempMatrix);
+      glyph.object.scale.setScalar(
+        glyph.scale * (1 + Math.sin(elapsed * 0.45 + index) * 0.025),
       );
     });
   };
