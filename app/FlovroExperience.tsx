@@ -357,20 +357,19 @@ export function FlovroExperience() {
             </p>
             <h1>
               <span className="hero-line">
-                <span>Calls answered.</span>
+                <span>Turn Your Vision</span>
               </span>
               <span className="hero-line hero-line-indent">
-                <span>Work automated.</span>
+                <span>Into the Growth</span>
               </span>
               <span className="hero-line hero-line-accent">
-                <span>Growth in motion.</span>
+                <span>You Deserve.</span>
               </span>
             </h1>
             <div className="hero-bottom hero-reveal">
               <p>
-                Flovro builds voice agents, connected automations, and digital
-                products that help businesses respond faster and operate with
-                less friction.
+                AI voice agents, powerful websites, and intelligent automations
+                built to move your business forward.
               </p>
               <a className="circle-link" href="#work" aria-label="Explore our work">
                 <span>Explore</span>
