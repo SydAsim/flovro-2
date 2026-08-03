@@ -46,6 +46,8 @@ test("server-renders the Flovro experience", async () => {
   assert.match(html, /AI voice agents/);
   assert.match(html, /Business automation/);
   assert.match(html, /Digital products/);
+  assert.match(html, /Three capabilities\./);
+  assert.match(html, /One connected growth system\./);
   assert.match(html, /Web development projects/);
   assert.match(html, /AI automations/);
   assert.match(html, /Voice agents/);
@@ -126,7 +128,7 @@ test("renders a clean draggable geographic globe with native page scrolling", as
   assert.match(styles, /\.section-index-link\.is-active/);
   assert.match(styles, /\.nav-shell\s*\{[^}]*background:\s*var\(--paper\)/s);
   assert.match(styles, /\.section-index\s*\{[^}]*color:\s*var\(--ink\)/s);
-  assert.doesNotMatch(experience, /<span>\{number\}<\/span>/);
+  assert.doesNotMatch(experience, /sectionLinks\.map\(\(\{[^}]*number/);
   assert.doesNotMatch(styles, /\.section-index-link::after/);
   assert.match(styles, /@media \(max-width:\s*899px\)[\s\S]*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
   assert.match(styles, /@media \(max-width:\s*680px\)[\s\S]*\.section-index-link\.is-active\s*\{[^}]*display:\s*flex/s);
@@ -148,5 +150,8 @@ test("renders a clean draggable geographic globe with native page scrolling", as
   assert.match(styles, /grid-auto-flow:\s*column/);
   assert.match(styles, /scroll-snap-type:\s*x mandatory/);
   assert.match(styles, /scroll-snap-align:\s*start/);
+  assert.match(styles, /\.work-overview\s*\{[^}]*linear-gradient\(rgba\(139, 255, 208, 0\.035\)/s);
+  assert.match(styles, /\.work-category-nav a\s*\{[^}]*border-radius:\s*13px/s);
+  assert.match(styles, /\.work-overview-heading > p:last-child::before/);
   assert.doesNotMatch(experience, /systems-section|voice-lab|flow-section|demoModes/);
 });
