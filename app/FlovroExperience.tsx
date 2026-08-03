@@ -363,8 +363,6 @@ export function FlovroExperience() {
         <section className="hero" id="top">
           <SignalField />
           <div className="hero-grid" />
-          <div className="hero-orbit hero-orbit-a" aria-hidden="true" />
-          <div className="hero-orbit hero-orbit-b" aria-hidden="true" />
 
           <div className="hero-copy">
             <p className="eyebrow hero-reveal">
@@ -416,7 +414,7 @@ export function FlovroExperience() {
           </div>
 
           <div className="scroll-cue hero-reveal" aria-hidden="true">
-            <span>Scroll to move</span>
+            <span>Scroll to explore</span>
             <i />
           </div>
         </section>

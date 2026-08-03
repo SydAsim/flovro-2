@@ -228,12 +228,12 @@ button {
 
 .signal-field {
   position: absolute;
-  z-index: -1;
+  z-index: 0;
   top: 0;
   right: -3vw;
   width: 73vw;
   height: 100%;
-  pointer-events: none;
+  pointer-events: auto;
   filter: saturate(1.09) contrast(1.04);
   will-change: transform, opacity;
 }
@@ -242,28 +242,13 @@ button {
   display: block;
   width: 100%;
   height: 100%;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
 }
 
-.hero-orbit {
-  position: absolute;
-  z-index: -1;
-  border: 1px solid rgba(139, 255, 208, 0.09);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.hero-orbit-a {
-  top: 13%;
-  right: 3%;
-  width: 44vw;
-  aspect-ratio: 1;
-}
-
-.hero-orbit-b {
-  top: 4%;
-  right: -5%;
-  width: 61vw;
-  aspect-ratio: 1;
+.signal-field canvas.is-dragging {
+  cursor: grabbing;
 }
 
 .hero-copy {

@@ -14,51 +14,6 @@ type WorldGeometry =
 type WorldData = {
   features: Array<{ geometry: WorldGeometry | null }>;
 };
-type Route = {
-  from: Coordinate;
-  to: Coordinate;
-  height: number;
-  phase: number;
-  speed: number;
-};
-
-const routes: Route[] = [
-  { from: [-0.13, 51.51], to: [55.27, 25.2], height: 0.38, phase: 0.04, speed: 0.14 },
-  { from: [-0.13, 51.51], to: [3.38, 6.52], height: 0.3, phase: 0.28, speed: 0.11 },
-  { from: [2.35, 48.86], to: [31.24, 30.04], height: 0.24, phase: 0.52, speed: 0.16 },
-  { from: [55.27, 25.2], to: [67.01, 24.86], height: 0.25, phase: 0.72, speed: 0.13 },
-  { from: [36.82, -1.29], to: [18.42, -33.92], height: 0.34, phase: 0.86, speed: 0.1 },
-  { from: [-3.7, 40.42], to: [-74, 40.71], height: 0.52, phase: 0.18, speed: 0.08 },
-  { from: [67.01, 24.86], to: [103.82, 1.35], height: 0.42, phase: 0.62, speed: 0.12 },
-  { from: [28.98, 41.01], to: [18.07, 59.33], height: 0.28, phase: 0.4, speed: 0.15 },
-];
-
-const networkNodes: Coordinate[] = [
-  [-0.13, 51.51],
-  [2.35, 48.86],
-  [-3.7, 40.42],
-  [13.4, 52.52],
-  [18.07, 59.33],
-  [28.98, 41.01],
-  [31.24, 30.04],
-  [3.38, 6.52],
-  [36.82, -1.29],
-  [28.04, -26.2],
-  [18.42, -33.92],
-  [55.27, 25.2],
-  [67.01, 24.86],
-  [72.88, 19.08],
-  [77.21, 28.61],
-  [103.82, 1.35],
-  [106.85, -6.21],
-  [139.69, 35.68],
-  [151.21, -33.87],
-  [-74, 40.71],
-  [-79.38, 43.65],
-  [-99.13, 19.43],
-  [-122.42, 37.77],
-  [-46.63, -23.55],
-];
 
 function getPolygons(geometry: WorldGeometry) {
   return geometry.type === "Polygon"
@@ -75,18 +30,6 @@ function latLngToVector3(lng: number, lat: number, radius: number) {
     radius * Math.cos(phi),
     radius * Math.sin(phi) * Math.sin(theta),
   );
-}
-
-function createRouteCurve(route: Route) {
-  const start = latLngToVector3(route.from[0], route.from[1], GLOBE_RADIUS + 0.045);
-  const end = latLngToVector3(route.to[0], route.to[1], GLOBE_RADIUS + 0.045);
-  const midpoint = start
-    .clone()
-    .add(end)
-    .normalize()
-    .multiplyScalar(GLOBE_RADIUS + route.height);
-
-  return new THREE.QuadraticBezierCurve3(start, midpoint, end);
 }
 
 function createGraticulePositions(radius: number) {
@@ -114,79 +57,6 @@ function createGraticulePositions(radius: number) {
   }
 
   return new Float32Array(positions);
-}
-
-function createStarField(count: number) {
-  const positions = new Float32Array(count * 3);
-  let seed = 48271;
-  const random = () => {
-    seed = (seed * 16807) % 2147483647;
-    return (seed - 1) / 2147483646;
-  };
-
-  for (let index = 0; index < count; index += 1) {
-    const radius = 3.8 + random() * 5.2;
-    const theta = random() * Math.PI * 2;
-    const phi = Math.acos(2 * random() - 1);
-    positions[index * 3] = radius * Math.sin(phi) * Math.cos(theta);
-    positions[index * 3 + 1] = radius * Math.cos(phi);
-    positions[index * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
-  }
-
-  return positions;
-}
-
-function createSignalPointMaterial(
-  color: number,
-  size: number,
-  opacity = 1,
-) {
-  return new THREE.ShaderMaterial({
-    uniforms: {
-      uColor: { value: new THREE.Color(color) },
-      uOpacity: { value: opacity },
-      uSize: { value: size },
-      uTime: { value: 0 },
-    },
-    vertexShader: `
-      attribute float aPhase;
-      attribute float aStrength;
-      uniform float uSize;
-      uniform float uTime;
-      varying float vPulse;
-      varying float vStrength;
-
-      void main() {
-        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-        vPulse = 0.82 + 0.18 * sin(uTime * 2.8 + aPhase);
-        vStrength = aStrength;
-        gl_PointSize = uSize * (0.55 + 0.45 * aStrength) * vPulse
-          * (100.0 / max(1.0, -mvPosition.z));
-        gl_Position = projectionMatrix * mvPosition;
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 uColor;
-      uniform float uOpacity;
-      varying float vPulse;
-      varying float vStrength;
-
-      void main() {
-        float radial = distance(gl_PointCoord, vec2(0.5));
-        float core = smoothstep(0.19, 0.025, radial);
-        float glow = smoothstep(0.5, 0.12, radial);
-        float ring = smoothstep(0.45, 0.38, radial)
-          - smoothstep(0.31, 0.24, radial);
-        float alpha = (core + glow * 0.24 + ring * 0.72)
-          * uOpacity * vStrength * vPulse;
-        vec3 color = mix(uColor, vec3(0.9, 1.0, 0.97), core * 0.74);
-        gl_FragColor = vec4(color, alpha);
-      }
-    `,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  });
 }
 
 function createGeographyPositions(worldData: WorldData, compact: boolean) {
@@ -305,7 +175,6 @@ export function SignalField() {
           "(prefers-reduced-motion: reduce)",
         ).matches;
         const isCompactViewport = window.innerWidth < 760;
-        const hero = host.closest<HTMLElement>(".hero");
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
         camera.position.set(0, 0, 7.35);
@@ -324,13 +193,9 @@ export function SignalField() {
         renderer.toneMappingExposure = 1.15;
         host.appendChild(renderer.domElement);
 
-        const scrollRig = new THREE.Group();
-        const pointerRig = new THREE.Group();
         const signal = new THREE.Group();
         const globe = new THREE.Group();
-        scene.add(scrollRig);
-        scrollRig.add(pointerRig);
-        pointerRig.add(signal);
+        scene.add(signal);
         signal.add(globe);
         globe.rotation.set(0.08, -1.9, -0.07);
 
@@ -444,254 +309,6 @@ export function SignalField() {
           globe.add(new THREE.LineSegments(outlineGeometry, outlineMaterial));
         }
 
-        const routeCurves = routes.map(createRouteCurve);
-        const routeMaterial = registerMaterial(
-          new THREE.MeshBasicMaterial({
-            color: 0x55ffd0,
-            transparent: true,
-            opacity: 0.7,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-          }),
-        );
-        routeCurves.forEach((curve) => {
-          const geometry = registerGeometry(
-            new THREE.TubeGeometry(
-              curve,
-              isCompactViewport ? 28 : 48,
-              isCompactViewport ? 0.005 : 0.007,
-              5,
-              false,
-            ),
-          );
-          globe.add(new THREE.Mesh(geometry, routeMaterial));
-        });
-
-        const beaconPositions = new Float32Array(routes.length * 2 * 3);
-        const beaconPhases = new Float32Array(routes.length * 2);
-        const beaconStrengths = new Float32Array(routes.length * 2).fill(1);
-        routes.forEach((route, index) => {
-          [route.from, route.to].forEach(([lng, lat], endpointIndex) => {
-            const beaconIndex = index * 2 + endpointIndex;
-            const point = latLngToVector3(lng, lat, GLOBE_RADIUS + 0.052);
-            beaconPositions[beaconIndex * 3] = point.x;
-            beaconPositions[beaconIndex * 3 + 1] = point.y;
-            beaconPositions[beaconIndex * 3 + 2] = point.z;
-            beaconPhases[beaconIndex] = beaconIndex * 0.73;
-          });
-        });
-        const beaconGeometry = registerGeometry(new THREE.BufferGeometry());
-        beaconGeometry.setAttribute(
-          "position",
-          new THREE.BufferAttribute(beaconPositions, 3),
-        );
-        beaconGeometry.setAttribute(
-          "aPhase",
-          new THREE.BufferAttribute(beaconPhases, 1),
-        );
-        beaconGeometry.setAttribute(
-          "aStrength",
-          new THREE.BufferAttribute(beaconStrengths, 1),
-        );
-        const beaconMaterial = registerMaterial(
-          createSignalPointMaterial(
-            0x58ffca,
-            isCompactViewport ? 0.34 : 0.4,
-            0.92,
-          ),
-        );
-        globe.add(new THREE.Points(beaconGeometry, beaconMaterial));
-
-        const detailNodeGeometry = registerGeometry(
-          new THREE.OctahedronGeometry(0.012, 0),
-        );
-        const detailNodeMaterial = registerMaterial(
-          new THREE.MeshBasicMaterial({
-            color: 0x49d6a8,
-            transparent: true,
-            opacity: 0.68,
-          }),
-        );
-        const detailNodes = new THREE.InstancedMesh(
-          detailNodeGeometry,
-          detailNodeMaterial,
-          networkNodes.length,
-        );
-        const nodeTransform = new THREE.Object3D();
-        networkNodes.forEach(([lng, lat], index) => {
-          nodeTransform.position.copy(
-            latLngToVector3(lng, lat, GLOBE_RADIUS + 0.048),
-          );
-          nodeTransform.updateMatrix();
-          detailNodes.setMatrixAt(index, nodeTransform.matrix);
-        });
-        detailNodes.instanceMatrix.needsUpdate = true;
-        globe.add(detailNodes);
-
-        const routeTrailSteps = 4;
-        const pulseCount = routes.length * routeTrailSteps;
-        const pulsePositions = new Float32Array(pulseCount * 3);
-        const pulsePhases = new Float32Array(pulseCount);
-        const pulseStrengths = new Float32Array(pulseCount);
-        routes.forEach((_, routeIndex) => {
-          for (let trailIndex = 0; trailIndex < routeTrailSteps; trailIndex += 1) {
-            const pulseIndex = routeIndex * routeTrailSteps + trailIndex;
-            pulsePhases[pulseIndex] = routeIndex * 0.84 + trailIndex * 0.22;
-            pulseStrengths[pulseIndex] = 1 - trailIndex * 0.22;
-          }
-        });
-        const pulseGeometry = registerGeometry(new THREE.BufferGeometry());
-        pulseGeometry.setAttribute(
-          "position",
-          new THREE.BufferAttribute(pulsePositions, 3),
-        );
-        pulseGeometry.setAttribute(
-          "aPhase",
-          new THREE.BufferAttribute(pulsePhases, 1),
-        );
-        pulseGeometry.setAttribute(
-          "aStrength",
-          new THREE.BufferAttribute(pulseStrengths, 1),
-        );
-        const pulseMaterial = registerMaterial(
-          createSignalPointMaterial(
-            0x48ffc4,
-            isCompactViewport ? 0.25 : 0.29,
-            0.96,
-          ),
-        );
-        globe.add(new THREE.Points(pulseGeometry, pulseMaterial));
-
-        const orbitSpecs = [
-          { radius: 2.08, rotation: new THREE.Euler(1.1, 0.18, 0.12), speed: 0.28 },
-          { radius: 2.24, rotation: new THREE.Euler(0.5, 1.08, -0.42), speed: -0.22 },
-          { radius: 2.34, rotation: new THREE.Euler(1.44, -0.58, 0.28), speed: 0.18 },
-          { radius: 2.16, rotation: new THREE.Euler(0.78, -1.18, 0.56), speed: -0.31 },
-        ];
-        const orbitShell = new THREE.Group();
-        signal.add(orbitShell);
-        const orbitMaterial = registerMaterial(
-          new THREE.MeshBasicMaterial({
-            color: 0x6effda,
-            transparent: true,
-            opacity: 0.28,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-          }),
-        );
-        orbitSpecs.forEach((spec) => {
-          const geometry = registerGeometry(
-            new THREE.TorusGeometry(
-              spec.radius,
-              0.006,
-              5,
-              isCompactViewport ? 88 : 132,
-            ),
-          );
-          const orbit = new THREE.Mesh(geometry, orbitMaterial);
-          orbit.rotation.copy(spec.rotation);
-          orbitShell.add(orbit);
-        });
-
-        const orbiterGeometry = registerGeometry(
-          new THREE.OctahedronGeometry(0.04, 0),
-        );
-        const orbiterMaterial = registerMaterial(
-          new THREE.MeshBasicMaterial({ color: 0x55ffca }),
-        );
-        const orbiterCount = isCompactViewport ? 9 : 14;
-        const orbiters = new THREE.InstancedMesh(
-          orbiterGeometry,
-          orbiterMaterial,
-          orbiterCount,
-        );
-        orbiters.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-        orbitShell.add(orbiters);
-
-        const orbiterGlowGeometry = registerGeometry(
-          new THREE.SphereGeometry(0.082, 8, 8),
-        );
-        const orbiterGlowMaterial = registerMaterial(
-          new THREE.MeshBasicMaterial({
-            color: 0x2dffb7,
-            transparent: true,
-            opacity: 0.14,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-          }),
-        );
-        const orbiterGlows = new THREE.InstancedMesh(
-          orbiterGlowGeometry,
-          orbiterGlowMaterial,
-          orbiterCount,
-        );
-        orbiterGlows.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-        orbitShell.add(orbiterGlows);
-
-        const orbiterTrailSteps = 3;
-        const orbiterTrailCount = orbiterCount * orbiterTrailSteps;
-        const orbiterTrailPositions = new Float32Array(orbiterTrailCount * 3);
-        const orbiterTrailPhases = new Float32Array(orbiterTrailCount);
-        const orbiterTrailStrengths = new Float32Array(orbiterTrailCount);
-        for (let index = 0; index < orbiterCount; index += 1) {
-          for (let trailIndex = 0; trailIndex < orbiterTrailSteps; trailIndex += 1) {
-            const pointIndex = index * orbiterTrailSteps + trailIndex;
-            orbiterTrailPhases[pointIndex] = index * 0.65 + trailIndex * 0.3;
-            orbiterTrailStrengths[pointIndex] = 0.55 - trailIndex * 0.16;
-          }
-        }
-        const orbiterTrailGeometry = registerGeometry(new THREE.BufferGeometry());
-        orbiterTrailGeometry.setAttribute(
-          "position",
-          new THREE.BufferAttribute(orbiterTrailPositions, 3),
-        );
-        orbiterTrailGeometry.setAttribute(
-          "aPhase",
-          new THREE.BufferAttribute(orbiterTrailPhases, 1),
-        );
-        orbiterTrailGeometry.setAttribute(
-          "aStrength",
-          new THREE.BufferAttribute(orbiterTrailStrengths, 1),
-        );
-        const orbiterTrailMaterial = registerMaterial(
-          createSignalPointMaterial(
-            0x41ffc0,
-            isCompactViewport ? 0.16 : 0.19,
-            0.74,
-          ),
-        );
-        const orbiterTrails = new THREE.Points(
-          orbiterTrailGeometry,
-          orbiterTrailMaterial,
-        );
-        orbitShell.add(orbiterTrails);
-        const orbiterTransform = new THREE.Object3D();
-        const orbiterGlowTransform = new THREE.Object3D();
-        const orbiterPosition = new THREE.Vector3();
-        const orbiterTrailPosition = new THREE.Vector3();
-
-        const starGeometry = registerGeometry(new THREE.BufferGeometry());
-        starGeometry.setAttribute(
-          "position",
-          new THREE.BufferAttribute(
-            createStarField(isCompactViewport ? 420 : 800),
-            3,
-          ),
-        );
-        const starMaterial = registerMaterial(
-          new THREE.PointsMaterial({
-            color: 0x75eacb,
-            size: 0.017,
-            sizeAttenuation: true,
-            transparent: true,
-            opacity: 0.62,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-          }),
-        );
-        const stars = new THREE.Points(starGeometry, starMaterial);
-        signal.add(stars);
-
         const ambientLight = new THREE.HemisphereLight(0x7dffe0, 0x010806, 0.45);
         const keyLight = new THREE.PointLight(0x74ffd8, 15, 10, 2);
         keyLight.position.set(-2.5, 3.3, 4.8);
@@ -707,19 +324,62 @@ export function SignalField() {
         const resizeObserver = new ResizeObserver(resize);
         resizeObserver.observe(host);
 
-        let pointerX = 0;
-        let pointerY = 0;
-        const onPointerMove = (event: PointerEvent) => {
-          pointerX = (event.clientX / window.innerWidth - 0.5) * 0.3;
-          pointerY = (event.clientY / window.innerHeight - 0.5) * 0.18;
-        };
-        window.addEventListener("pointermove", onPointerMove, { passive: true });
+        const canvas = renderer.domElement;
+        let dragging = false;
+        let activePointerId = -1;
+        let previousPointerX = 0;
+        let previousPointerY = 0;
+        let spinVelocityX = 0;
+        let spinVelocityY = 0;
 
-        let restoreHeroScroll: (() => void) | undefined;
+        const onPointerDown = (event: PointerEvent) => {
+          if (event.pointerType !== "mouse" || event.button !== 0) return;
+          dragging = true;
+          activePointerId = event.pointerId;
+          previousPointerX = event.clientX;
+          previousPointerY = event.clientY;
+          spinVelocityX = 0;
+          spinVelocityY = 0;
+          canvas.classList.add("is-dragging");
+          canvas.setPointerCapture(event.pointerId);
+        };
+
+        const onPointerMove = (event: PointerEvent) => {
+          if (!dragging || event.pointerId !== activePointerId) return;
+          const deltaX = event.clientX - previousPointerX;
+          const deltaY = event.clientY - previousPointerY;
+          previousPointerX = event.clientX;
+          previousPointerY = event.clientY;
+
+          globe.rotation.y += deltaX * 0.006;
+          globe.rotation.x = THREE.MathUtils.clamp(
+            globe.rotation.x + deltaY * 0.004,
+            -0.65,
+            0.65,
+          );
+          spinVelocityY = THREE.MathUtils.clamp(deltaX * 0.035, -1.2, 1.2);
+          spinVelocityX = THREE.MathUtils.clamp(deltaY * 0.025, -0.7, 0.7);
+        };
+
+        const finishPointerDrag = (event: PointerEvent) => {
+          if (event.pointerId !== activePointerId) return;
+          dragging = false;
+          activePointerId = -1;
+          canvas.classList.remove("is-dragging");
+          if (canvas.hasPointerCapture(event.pointerId)) {
+            canvas.releasePointerCapture(event.pointerId);
+          }
+        };
+
+        canvas.addEventListener("pointerdown", onPointerDown);
+        canvas.addEventListener("pointermove", onPointerMove);
+        canvas.addEventListener("pointerup", finishPointerDrag);
+        canvas.addEventListener("pointercancel", finishPointerDrag);
+        canvas.addEventListener("lostpointercapture", finishPointerDrag);
 
         const context = gsap.context(() => {
           gsap.set(signal.scale, { x: 0.12, y: 0.12, z: 0.12 });
-          const entranceTimeline = gsap
+          gsap
             .timeline({ defaults: { ease: "power4.out" } })
             .to(signal.scale, { x: 1, y: 1, z: 1, duration: 1.9 }, 0.35)
             .fromTo(
@@ -734,168 +394,6 @@ export function SignalField() {
               { z: 7.35, duration: 2.1 },
               0.25,
             );
-
-          if (!reduceMotion && hero) {
-            const scrollCue = hero.querySelector<HTMLElement>(".scroll-cue");
-            const heroOrbitA = hero.querySelector<HTMLElement>(".hero-orbit-a");
-            const heroOrbitB = hero.querySelector<HTMLElement>(".hero-orbit-b");
-            const nextSection = hero.nextElementSibling as HTMLElement | null;
-            const root = document.documentElement;
-            const body = document.body;
-            const lockAtTop = window.scrollY <= hero.offsetTop + 4;
-            const previousRootOverflow = root.style.overflow;
-            const previousBodyOverflow = body.style.overflow;
-            let lockActive = lockAtTop;
-            let entranceReady = false;
-            let queuedDelta = 0;
-            let scrollProgress = 0;
-            const progressState = { value: 0 };
-            let touchY = 0;
-            let detachIntentListeners = () => {};
-
-            const unlockHero = () => {
-              if (!lockActive) return;
-              lockActive = false;
-              root.style.overflow = previousRootOverflow;
-              body.style.overflow = previousBodyOverflow;
-              detachIntentListeners();
-            };
-
-            const finishHero = () => {
-              const shouldAdvance = lockActive;
-              unlockHero();
-              if (shouldAdvance) {
-                window.requestAnimationFrame(() => {
-                  nextSection?.scrollIntoView({ behavior: "smooth", block: "start" });
-                });
-              }
-            };
-
-            const heroTimeline = gsap.timeline({
-              paused: true,
-              defaults: { ease: "none" },
-              onComplete: finishHero,
-            });
-
-            heroTimeline
-              .addLabel("focus", 0)
-              .to(scrollCue, { autoAlpha: 0, duration: 0.08 }, "focus")
-              .to(
-                camera.position,
-                {
-                  z: isCompactViewport ? 6.15 : 5.75,
-                  duration: 0.78,
-                },
-                "focus",
-              )
-              .to(
-                scrollRig.rotation,
-                { y: Math.PI * 0.36, x: -0.1, duration: 0.78 },
-                "focus",
-              )
-              .to(
-                scrollRig.scale,
-                {
-                  x: isCompactViewport ? 1.04 : 1.1,
-                  y: isCompactViewport ? 1.04 : 1.1,
-                  z: isCompactViewport ? 1.04 : 1.1,
-                  duration: 0.78,
-                },
-                "focus",
-              )
-              .to(heroOrbitA, { scale: 1.2, rotation: 18, duration: 0.78 }, "focus")
-              .to(heroOrbitB, { scale: 1.12, rotation: -12, duration: 0.78 }, "focus")
-              .to({}, { duration: 0.18 });
-
-            const updateHeroProgress = (delta: number) => {
-              if (!lockActive || delta === 0) return;
-              if (!entranceReady) {
-                queuedDelta += delta;
-                return;
-              }
-
-              const interactionDistance = Math.max(window.innerHeight * 1.4, 900);
-              scrollProgress = gsap.utils.clamp(
-                0,
-                1,
-                scrollProgress + delta / interactionDistance,
-              );
-              gsap.to(progressState, {
-                value: scrollProgress,
-                duration: 0.42,
-                ease: "power3.out",
-                overwrite: "auto",
-                onUpdate: () => {
-                  heroTimeline.progress(progressState.value);
-                },
-              });
-            };
-
-            const onWheelIntent = (event: WheelEvent) => {
-              const multiplier =
-                event.deltaMode === 1
-                  ? 32
-                  : event.deltaMode === 2
-                    ? window.innerHeight
-                    : 1;
-              updateHeroProgress(event.deltaY * multiplier);
-            };
-
-            const onKeyIntent = (event: KeyboardEvent) => {
-              const target = event.target as HTMLElement | null;
-              if (
-                event.altKey ||
-                event.ctrlKey ||
-                event.metaKey ||
-                target?.closest("a, button, input, select, textarea, [contenteditable='true']")
-              ) {
-                return;
-              }
-
-              if (["ArrowDown", "PageDown", " "].includes(event.key)) {
-                updateHeroProgress(window.innerHeight * 0.28);
-              } else if (["ArrowUp", "PageUp"].includes(event.key)) {
-                updateHeroProgress(window.innerHeight * -0.28);
-              }
-            };
-
-            const onTouchStart = (event: TouchEvent) => {
-              touchY = event.touches[0]?.clientY ?? 0;
-            };
-
-            const onTouchMove = (event: TouchEvent) => {
-              const nextTouchY = event.touches[0]?.clientY ?? touchY;
-              const delta = touchY - nextTouchY;
-              touchY = nextTouchY;
-              updateHeroProgress(delta * 2.2);
-            };
-
-            if (lockAtTop) {
-              root.style.overflow = "hidden";
-              body.style.overflow = "hidden";
-              window.addEventListener("wheel", onWheelIntent, { passive: true });
-              window.addEventListener("keydown", onKeyIntent);
-              window.addEventListener("touchstart", onTouchStart, { passive: true });
-              window.addEventListener("touchmove", onTouchMove, { passive: true });
-
-              detachIntentListeners = () => {
-                window.removeEventListener("wheel", onWheelIntent);
-                window.removeEventListener("keydown", onKeyIntent);
-                window.removeEventListener("touchstart", onTouchStart);
-                window.removeEventListener("touchmove", onTouchMove);
-              };
-            }
-
-            entranceTimeline.eventCallback("onComplete", () => {
-              entranceReady = true;
-              if (queuedDelta !== 0) {
-                const delta = queuedDelta;
-                queuedDelta = 0;
-                updateHeroProgress(delta);
-              }
-            });
-            restoreHeroScroll = unlockHero;
-          }
         }, host);
 
         let frame = 0;
@@ -908,112 +406,59 @@ export function SignalField() {
         );
         visibilityObserver.observe(host);
         const clock = new THREE.Clock();
-        const pulseAttribute = pulseGeometry.getAttribute("position") as THREE.BufferAttribute;
-        const orbiterTrailAttribute = orbiterTrailGeometry.getAttribute(
-          "position",
-        ) as THREE.BufferAttribute;
 
         const render = () => {
           const delta = Math.min(clock.getDelta(), 0.05);
           const elapsed = clock.elapsedTime;
 
           if (sceneVisible && !reduceMotion) {
-            globe.rotation.y += delta * 0.052;
+            if (!dragging) {
+              globe.rotation.y += delta * (0.045 + spinVelocityY);
+              globe.rotation.x = THREE.MathUtils.clamp(
+                globe.rotation.x + delta * spinVelocityX,
+                -0.65,
+                0.65,
+              );
+              spinVelocityY = THREE.MathUtils.damp(
+                spinVelocityY,
+                0,
+                2.4,
+                delta,
+              );
+              spinVelocityX = THREE.MathUtils.damp(
+                spinVelocityX,
+                0,
+                2.4,
+                delta,
+              );
+            }
             if (landMaterial) landMaterial.uniforms.uTime.value = elapsed;
-            beaconMaterial.uniforms.uTime.value = elapsed;
-            pulseMaterial.uniforms.uTime.value = elapsed;
-            orbiterTrailMaterial.uniforms.uTime.value = elapsed;
             if (outlineMaterial) {
               outlineMaterial.opacity = 0.72 + Math.sin(elapsed * 0.8) * 0.06;
             }
             graticuleMaterial.opacity = 0.1 + Math.sin(elapsed * 0.45) * 0.018;
-            stars.rotation.y = elapsed * 0.006;
-            stars.rotation.x = Math.sin(elapsed * 0.1) * 0.018;
-            orbitShell.rotation.y = elapsed * -0.025;
-            orbitShell.rotation.z = Math.sin(elapsed * 0.12) * 0.04;
-
-            routes.forEach((route, index) => {
-              for (let trailIndex = 0; trailIndex < routeTrailSteps; trailIndex += 1) {
-                const progress =
-                  (elapsed * route.speed + route.phase - trailIndex * 0.022 + 1) % 1;
-                const point = routeCurves[index].getPointAt(progress);
-                const pulseIndex = index * routeTrailSteps + trailIndex;
-                pulsePositions[pulseIndex * 3] = point.x;
-                pulsePositions[pulseIndex * 3 + 1] = point.y;
-                pulsePositions[pulseIndex * 3 + 2] = point.z;
-              }
-            });
-            pulseAttribute.needsUpdate = true;
-
-            for (let index = 0; index < orbiterCount; index += 1) {
-              const spec = orbitSpecs[index % orbitSpecs.length];
-              const angle = elapsed * spec.speed + (index / orbiterCount) * Math.PI * 2;
-              orbiterPosition
-                .set(Math.cos(angle) * spec.radius, Math.sin(angle) * spec.radius, 0)
-                .applyEuler(spec.rotation);
-              orbiterTransform.position.copy(orbiterPosition);
-              const pulse = 0.82 + Math.sin(elapsed * 2.2 + index) * 0.18;
-              orbiterTransform.scale.setScalar(pulse);
-              orbiterTransform.updateMatrix();
-              orbiters.setMatrixAt(index, orbiterTransform.matrix);
-
-              orbiterGlowTransform.position.copy(orbiterPosition);
-              orbiterGlowTransform.scale.setScalar(0.9 + pulse * 0.34);
-              orbiterGlowTransform.updateMatrix();
-              orbiterGlows.setMatrixAt(index, orbiterGlowTransform.matrix);
-
-              for (let trailIndex = 0; trailIndex < orbiterTrailSteps; trailIndex += 1) {
-                const trailAngle =
-                  angle - Math.sign(spec.speed) * (trailIndex + 1) * 0.045;
-                orbiterTrailPosition
-                  .set(
-                    Math.cos(trailAngle) * spec.radius,
-                    Math.sin(trailAngle) * spec.radius,
-                    0,
-                  )
-                  .applyEuler(spec.rotation);
-                const trailPointIndex = index * orbiterTrailSteps + trailIndex;
-                orbiterTrailPositions[trailPointIndex * 3] = orbiterTrailPosition.x;
-                orbiterTrailPositions[trailPointIndex * 3 + 1] = orbiterTrailPosition.y;
-                orbiterTrailPositions[trailPointIndex * 3 + 2] = orbiterTrailPosition.z;
-              }
-            }
-            orbiters.instanceMatrix.needsUpdate = true;
-            orbiterGlows.instanceMatrix.needsUpdate = true;
-            orbiterTrailAttribute.needsUpdate = true;
-
-            pointerRig.rotation.y = THREE.MathUtils.damp(
-              pointerRig.rotation.y,
-              pointerX,
-              3.4,
-              delta,
-            );
-            pointerRig.rotation.x = THREE.MathUtils.damp(
-              pointerRig.rotation.x,
-              -pointerY,
-              3.4,
-              delta,
-            );
           }
 
-          if (sceneVisible) {
-            renderer.render(scene, camera);
-          }
+          if (sceneVisible) renderer.render(scene, camera);
           frame = window.requestAnimationFrame(render);
         };
         render();
 
         teardown = () => {
           window.cancelAnimationFrame(frame);
-          window.removeEventListener("pointermove", onPointerMove);
           visibilityObserver.disconnect();
-          restoreHeroScroll?.();
           resizeObserver.disconnect();
           context.revert();
+          canvas.removeEventListener("pointerdown", onPointerDown);
+          canvas.removeEventListener("pointermove", onPointerMove);
+          canvas.removeEventListener("pointerup", finishPointerDrag);
+          canvas.removeEventListener("pointercancel", finishPointerDrag);
+          canvas.removeEventListener("lostpointercapture", finishPointerDrag);
+          canvas.classList.remove("is-dragging");
           geometries.forEach((geometry) => geometry.dispose());
           materials.forEach((material) => material.dispose());
           renderer.dispose();
-          renderer.domElement.remove();
+          canvas.remove();
         };
       },
     );

@@ -46,13 +46,17 @@ test("server-renders the Flovro experience", async () => {
   assert.doesNotMatch(html, /codex-preview|Building your site|react-loading-skeleton/);
 });
 
-test("renders the geographic Three.js globe with damped input", async () => {
+test("renders a draggable geographic globe with native page scrolling", async () => {
   const signalField = await readFile(
     new URL("../app/SignalField.tsx", import.meta.url),
     "utf8",
   );
   const experience = await readFile(
     new URL("../app/FlovroExperience.tsx", import.meta.url),
+    "utf8",
+  );
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
     "utf8",
   );
 
@@ -62,26 +66,24 @@ test("renders the geographic Three.js globe with damped input", async () => {
   assert.match(signalField, /createGraticulePositions/);
   assert.match(signalField, /compact \? 640 : 1024/);
   assert.match(signalField, /compact \? 4 : 3/);
-  assert.match(signalField, /networkNodes\.length/);
-  assert.match(signalField, /createSignalPointMaterial/);
-  assert.match(signalField, /const routeTrailSteps = 4/);
-  assert.match(signalField, /new THREE\.OctahedronGeometry/);
-  assert.match(signalField, /orbiterGlows/);
-  assert.match(signalField, /orbiterTrailPositions/);
-  assert.match(signalField, /z: isCompactViewport \? 6\.15 : 5\.75/);
-  assert.match(signalField, /x: isCompactViewport \? 1\.04 : 1\.1/);
-  assert.doesNotMatch(signalField, /z: 4\.8/);
-  assert.doesNotMatch(signalField, /x: 1\.27/);
   assert.match(signalField, /new THREE\.LineSegments/);
-  assert.match(signalField, /new THREE\.TubeGeometry/);
   assert.match(signalField, /gl_PointCoord/);
-  assert.match(signalField, /createStarField\(isCompactViewport \? 420 : 800\)/);
-  assert.match(signalField, /new THREE\.InstancedMesh/);
+  assert.match(signalField, /canvas\.setPointerCapture/);
+  assert.match(signalField, /canvas\.classList\.add\("is-dragging"\)/);
+  assert.match(signalField, /globe\.rotation\.y \+= deltaX \* 0\.006/);
   assert.match(signalField, /THREE\.MathUtils\.damp/);
-  assert.match(signalField, /duration: 0\.42/);
   assert.match(signalField, /visibilityObserver/);
+  assert.doesNotMatch(signalField, /heroTimeline|scrollRig/);
+  assert.doesNotMatch(signalField, /["']wheel["']|touchmove/);
+  assert.doesNotMatch(signalField, /TubeGeometry|InstancedMesh|routeTrail/);
+  assert.doesNotMatch(signalField, /createSignalPointMaterial|orbiter/);
   assert.doesNotMatch(signalField, /earth-(?:day|night)\.jpg/);
   assert.doesNotMatch(signalField, /atmosphereGeometry/);
+  assert.match(styles, /pointer-events: auto/);
+  assert.match(styles, /cursor: grab/);
+  assert.match(styles, /touch-action: pan-y/);
+  assert.match(experience, /Scroll to explore/);
+  assert.doesNotMatch(experience, /hero-orbit/);
   assert.equal((experience.match(/href: "https:\/\//g) ?? []).length, 8);
   assert.match(experience, /id="web-development"/);
   assert.match(experience, /id="ai-automations"/);
